@@ -26,7 +26,7 @@ typedef struct {
 } Piece;
 
 void piece_textures_init(void);
-Piece piece_new_empty();
+Piece piece_new_empty(void);
 
 bool piece_is_empty(Piece piece);
 Texture2D* piece_get_texture(Piece piece);

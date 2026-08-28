@@ -15,16 +15,73 @@
 #include "move.h"
 #include "move_generation.h"
 
-Texture2D move_indicator_texture;
-Texture2D capture_indicator_texture;
+static Texture2D move_indicator_texture;
+static Texture2D capture_indicator_texture;
 
-void handle_clay_errors(Clay_ErrorData errorData) {
+static void handle_clay_errors(Clay_ErrorData errorData) {
     printf("%d", errorData.errorType);
     printf("%.*s", errorData.errorText.length, errorData.errorText.chars);
     exit(-1);
 }
 
-Clay_RenderCommandArray build_layout(float delta_time, Board* board, Pos* selected_pos, MoveBoard* moves) {
+static void detect_piece_mouse_input(Board* board, MoveBoard* moves, Pos* selected_pos, Pos pos) {
+    if (!Clay_Hovered()) return;
+
+    Piece piece = board_get(board, pos);
+    Move move = move_board_get(moves, pos);
+
+    printf("%zu, %zu\n", pos.row, pos.col);
+    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && move_is_empty(move)) {
+        *selected_pos = piece_is_empty(piece) ? pos_new_invalid() : pos;
+        moves_generate(board, moves, pos);
+    } else if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && !move_is_empty(move)) {
+        move_execute(board, move);
+        *selected_pos = pos_new_invalid();
+        *moves = (MoveBoard) { 0 };
+    }
+}
+
+static void build_piece_layout(Board* board, MoveBoard* moves, Pos* selected_pos, Pos pos) {
+    Piece piece = board_get(board, pos);
+    Move move = move_board_get(moves, pos);
+
+    Clay_Color square_color = pos_eq(*selected_pos, pos)
+        ? (Clay_Color) { 160, 160, 0, 255 }
+        : (pos.row + pos.col) % 2 == 0
+            ? (Clay_Color) { 200, 200, 200, 255 }
+            : (Clay_Color) { 50, 100, 50, 255 };
+
+    CLAY(CLAY_IDI("board_square", pos.row * 8 + pos.col), (Clay_ElementDeclaration) {
+        .layout = {
+            .sizing = { CLAY_SIZING_PERCENT(0.125) },
+        },
+        .backgroundColor = square_color,
+        .aspectRatio = { 1 },
+    }) {
+        
+        CLAY(CLAY_IDI("board_piece", pos.row * 8 + pos.col), (Clay_ElementDeclaration) {
+            .layout = {
+                .sizing = { CLAY_SIZING_GROW() },
+            },
+            .image = { piece_get_texture(piece) },
+            .aspectRatio = { 1 },
+        }) {
+            detect_piece_mouse_input(board, moves, selected_pos, pos);
+
+            if (!move_is_empty(move)) {
+                CLAY(CLAY_IDI("move_indicator", pos.row * 8 + pos.col), (Clay_ElementDeclaration) {
+                    .layout = {
+                        .sizing = { CLAY_SIZING_GROW() }
+                    },
+                    .image = { piece_is_empty(piece) ? &move_indicator_texture : &capture_indicator_texture },
+                    .aspectRatio = { 1 },
+                });
+            }
+        }
+    }
+}
+
+static Clay_RenderCommandArray build_layout(float delta_time, Board* board, MoveBoard* moves, Pos* selected_pos) {
         Clay_BeginLayout();
 
         CLAY(CLAY_ID("panel"), (Clay_ElementDeclaration) {
@@ -48,51 +105,7 @@ Clay_RenderCommandArray build_layout(float delta_time, Board* board, Pos* select
                         },
                     })
                     for (size_t col = 0; col < 8; col++) {
-                        Pos pos = { row, col };
-                        Piece piece = board_get(board, pos);
-                        Move move = move_board_get(moves, pos);
-
-                        Clay_Color square_color = pos_eq(*selected_pos, pos)
-                            ? (Clay_Color) { 160, 160, 0, 255 }
-                            : (row + col) % 2 == 0 ? (Clay_Color) { 200, 200, 200, 255 } : (Clay_Color) { 50, 100, 50, 255 };
-
-                        CLAY(CLAY_IDI("board_square", row * 8 + col), (Clay_ElementDeclaration) {
-                            .layout = {
-                                .sizing = { CLAY_SIZING_PERCENT(0.125) },
-                            },
-                            .backgroundColor = square_color,
-                            .aspectRatio = 1,
-                        }) {
-                            
-                            CLAY(CLAY_IDI("board_piece", row * 8 + col), (Clay_ElementDeclaration) {
-                                .layout = {
-                                    .sizing = { CLAY_SIZING_GROW() },
-                                },
-                                .image = { piece_get_texture(piece) },
-                                .aspectRatio = 1,
-                            }) {
-                                if (!move_is_empty(move_board_get(moves, pos))) {
-                                    CLAY(CLAY_IDI("move_indicator", row * 8 + col), (Clay_ElementDeclaration) {
-                                        .layout = {
-                                            .sizing = { CLAY_SIZING_GROW() }
-                                        },
-                                        .image = { piece_is_empty(piece) ? &move_indicator_texture : &capture_indicator_texture },
-                                        .aspectRatio = 1,
-                                    });
-                                }
-                            }
-
-                            if (Clay_Hovered()) {
-                                if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && move_is_empty(move)) {
-                                    *selected_pos = piece_is_empty(piece) ? pos_new_invalid() : pos;
-                                    moves_generate(board, moves, pos);
-                                } else if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && !move_is_empty(move)) {
-                                    move_execute(board, move);
-                                    *selected_pos = pos_new_invalid();
-                                    *moves = (MoveBoard) { 0 };
-                                }
-                            }
-                        }
+                        build_piece_layout(board, moves, selected_pos, (Pos) { row, col });
                     }
                 }
             }
@@ -129,7 +142,7 @@ int main() {
         Clay_SetPointerState((Clay_Vector2) { mouse_pos.x, mouse_pos.y }, IsMouseButtonDown(MOUSE_BUTTON_LEFT));
         Clay_UpdateScrollContainers(true, (Clay_Vector2) { mouse_wheel.x, mouse_wheel.y }, delta_time);
 
-        Clay_RenderCommandArray renderCommands = build_layout(delta_time, &board, &selected_pos, &moves);
+        Clay_RenderCommandArray renderCommands = build_layout(delta_time, &board, &moves, &selected_pos);
 
         BeginDrawing();
 

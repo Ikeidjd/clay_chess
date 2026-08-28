@@ -26,7 +26,7 @@ Move move_promotion_as_move(MovePromotion move) {
     };
 }
 
-Move move_new_empty() {
+Move move_new_empty(void) {
     return (Move) {
         .type = MOVE_EMPTY,
     };

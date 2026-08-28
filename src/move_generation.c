@@ -4,7 +4,7 @@
 
 #include "piece.h"
 
-Move move_board_get(MoveBoard* moves, Pos pos) {
+Move move_board_get(const MoveBoard* moves, Pos pos) {
     assert(pos.row < BOARD_SIZE && pos.col < BOARD_SIZE);
     return moves->moves[pos.row][pos.col];
 }
@@ -14,7 +14,7 @@ void move_board_set(MoveBoard* moves, Pos pos, Move move) {
     moves->moves[pos.row][pos.col] = move;
 }
 
-static void moves_generate_single(Board* board, MoveBoard* moves, Pos from, Dir* dirs, size_t dirs_length) {
+static void moves_generate_single(const Board* board, MoveBoard* moves, Pos from, Dir* dirs, size_t dirs_length) {
     Piece src = board_get(board, from);
 
     for (size_t i = 0; i < dirs_length; i++) {
@@ -31,7 +31,7 @@ static void moves_generate_single(Board* board, MoveBoard* moves, Pos from, Dir*
     }
 }
 
-static void moves_generate_sliding(Board* board, MoveBoard* moves, Pos from, Dir* dirs, size_t dirs_length) {
+static void moves_generate_sliding(const Board* board, MoveBoard* moves, Pos from, Dir* dirs, size_t dirs_length) {
     Piece src = board_get(board, from);
 
     for (size_t i = 0; i < dirs_length; i++) {
@@ -85,7 +85,7 @@ static Dir cardinal_dirs[] = {
     { 0, -1 },
 };
 
-void moves_generate(Board* board, MoveBoard* moves, Pos pos) {
+void moves_generate(const Board* board, MoveBoard* moves, Pos pos) {
     *moves = (MoveBoard) { 0 };
     Piece piece = board_get(board, pos);
 

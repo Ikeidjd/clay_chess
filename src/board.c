@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-Board board_new_normal() {
+Board board_new_normal(void) {
     Board board = { 0 };
 
     board_set(&board, (Pos) { 0, 0 }, (Piece) { .type = PIECE_TYPE_ROOK, .color = PIECE_COLOR_BLACK });
@@ -31,7 +31,7 @@ Board board_new_normal() {
     return board;
 }
 
-Board board_new_pawnless() {
+Board board_new_pawnless(void) {
     Board board = { 0 };
 
     board_set(&board, (Pos) { 0, 0 }, (Piece) { .type = PIECE_TYPE_ROOK, .color = PIECE_COLOR_BLACK });
@@ -55,7 +55,7 @@ Board board_new_pawnless() {
     return board;
 }
 
-Board board_new_castle() {
+Board board_new_castle(void) {
     Board board = { 0 };
 
     board_set(&board, (Pos) { 0, 0 }, (Piece) { .type = PIECE_TYPE_ROOK, .color = PIECE_COLOR_BLACK });
@@ -69,7 +69,7 @@ Board board_new_castle() {
     return board;
 }
 
-Piece board_get(Board* board, Pos pos) {
+Piece board_get(const Board* board, Pos pos) {
     assert(pos.row < BOARD_SIZE && pos.col < BOARD_SIZE);
     return board->pieces[pos.row][pos.col];
 }

@@ -11,11 +11,11 @@ typedef struct {
     Piece pieces[BOARD_SIZE][BOARD_SIZE];
 } Board;
 
-Board board_new_normal();
-Board board_new_pawnless();
-Board board_new_castle();
+Board board_new_normal(void);
+Board board_new_pawnless(void);
+Board board_new_castle(void);
 
-Piece board_get(Board* board, Pos pos);
+Piece board_get(const Board* board, Pos pos);
 void board_set(Board* board, Pos pos, Piece piece);
 bool board_is_in_bounds(Pos pos);
 

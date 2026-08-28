@@ -10,7 +10,7 @@ typedef struct {
     size_t col;
 } Pos;
 
-Pos pos_new_invalid();
+Pos pos_new_invalid(void);
 Pos pos_plus_dir(Pos pos, Dir dir);
 
 bool pos_is_valid(Pos pos);

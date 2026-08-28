@@ -2,7 +2,7 @@
 
 #include "board.h"
 
-Pos pos_new_invalid() {
+Pos pos_new_invalid(void) {
     return (Pos) { -1, -1 };
 }
 
