@@ -22,6 +22,13 @@ void piece_textures_init(void) {
     piece_textures[PIECE_COLOR_BLACK][PIECE_TYPE_KING] = LoadTexture("res/black/king.png");
 }
 
+Piece piece_new_empty() {
+    return (Piece) {
+        .type = PIECE_TYPE_EMPTY,
+        .color = PIECE_COLOR_EMPTY,
+    };
+}
+
 bool piece_is_empty(Piece piece) {
     return piece.type == PIECE_TYPE_EMPTY || piece.color == PIECE_COLOR_EMPTY;
 }

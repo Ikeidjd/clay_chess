@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include "pos.h"
 #include "piece.h"
 
 #define BOARD_SIZE 8
@@ -10,5 +11,12 @@ typedef struct {
     Piece pieces[BOARD_SIZE][BOARD_SIZE];
 } Board;
 
-Piece board_get(Board* board, size_t i, size_t j);
-void board_set(Board* board, size_t i, size_t j, Piece piece);
+Board board_new_normal();
+Board board_new_pawnless();
+Board board_new_castle();
+
+Piece board_get(Board* board, Pos pos);
+void board_set(Board* board, Pos pos, Piece piece);
+bool board_is_in_bounds(Pos pos);
+
+void board_move(Board* board, Pos from, Pos to);
