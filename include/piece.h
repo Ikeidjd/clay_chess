@@ -25,8 +25,9 @@ typedef struct {
     PieceColor color;
 } Piece;
 
-void piece_textures_init(void);
 Piece piece_new_empty(void);
 
 bool piece_is_empty(Piece piece);
 Texture2D* piece_get_texture(Piece piece);
+
+char piece_get_notation(Piece piece);

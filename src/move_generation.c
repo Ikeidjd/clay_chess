@@ -49,6 +49,28 @@ static void moves_generate_sliding(const Board* board, MoveBoard* moves, Pos fro
     }
 }
 
+static void moves_generate_castle(const Board* board, MoveBoard* moves, Pos king_from, Dir dir, bool can_castle) {
+    if (!can_castle) return;
+
+    Piece src = board_get(board, king_from);
+    Pos rook_from = pos_plus_dir(king_from, dir);
+
+    while (board_is_in_bounds(rook_from) && piece_is_empty(board_get(board, rook_from))) {
+        rook_from = pos_plus_dir(rook_from, dir);
+    }
+
+    if (!board_is_in_bounds(rook_from)) return;
+
+    Piece dst = board_get(board, rook_from);
+
+    if (dst.type != PIECE_TYPE_ROOK || dst.color != src.color) return;
+
+    Pos rook_to = pos_plus_dir(king_from, dir);
+    Pos king_to = pos_plus_dir(rook_to, dir);
+
+    move_board_set(moves, king_to, move_new_castle((MoveNormal) { king_from, king_to }, (MoveNormal) { rook_from, rook_to }));
+}
+
 static Dir knight_dirs[] = {
     { 2, 1 },
     { 2, -1 },
@@ -85,7 +107,10 @@ static Dir cardinal_dirs[] = {
     { 0, -1 },
 };
 
-void moves_generate(const Board* board, MoveBoard* moves, Pos pos) {
+static Dir kingside = { 0, 1 };
+static Dir queenside = { 0, -1 };
+
+void moves_generate(const Board* board, MoveBoard* moves, Pos pos, bool can_castle_kingside, bool can_castle_queenside) {
     *moves = (MoveBoard) { 0 };
     Piece piece = board_get(board, pos);
 
@@ -108,6 +133,8 @@ void moves_generate(const Board* board, MoveBoard* moves, Pos pos) {
             break;
         case PIECE_TYPE_KING:
             moves_generate_single(board, moves, pos, cardinal_dirs, sizeof(cardinal_dirs) / sizeof(cardinal_dirs[0]));
+            moves_generate_castle(board, moves, pos, kingside, can_castle_kingside);
+            moves_generate_castle(board, moves, pos, queenside, can_castle_queenside);
             break;
     }
 }

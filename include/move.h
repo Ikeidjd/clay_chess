@@ -35,9 +35,9 @@ typedef struct {
     } as;
 } Move;
 
-Move move_normal_as_move(MoveNormal move);
-Move move_castle_as_move(MoveCastle move);
-Move move_promotion_as_move(MovePromotion move);
+Move move_normal_wrap(MoveNormal move);
+Move move_castle_wrap(MoveCastle move);
+Move move_promotion_wrap(MovePromotion move);
 
 Move move_new_empty(void);
 Move move_new_normal(Pos from, Pos to);
@@ -47,3 +47,11 @@ Move move_new_promotion(MoveNormal move, Piece transgender);
 bool move_is_empty(Move move);
 
 void move_execute(Board* board, Move move);
+
+#define MOVE_NOTATION_SIZE 15
+
+typedef struct {
+    char data[MOVE_NOTATION_SIZE + 1];
+} MoveNotation;
+
+MoveNotation move_get_notation(const Board* board, Move move);

@@ -4,23 +4,7 @@
 
 #include "raylib.h"
 
-static Texture2D piece_textures[PIECE_COLOR_BLACK + 1][PIECE_TYPE_KING + 1];
-
-void piece_textures_init(void) {
-    piece_textures[PIECE_COLOR_WHITE][PIECE_TYPE_PAWN] = LoadTexture("res/white/pawn.png");
-    piece_textures[PIECE_COLOR_WHITE][PIECE_TYPE_KNIGHT] = LoadTexture("res/white/knight.png");
-    piece_textures[PIECE_COLOR_WHITE][PIECE_TYPE_BISHOP] = LoadTexture("res/white/bishop.png");
-    piece_textures[PIECE_COLOR_WHITE][PIECE_TYPE_ROOK] = LoadTexture("res/white/rook.png");
-    piece_textures[PIECE_COLOR_WHITE][PIECE_TYPE_QUEEN] = LoadTexture("res/white/queen.png");
-    piece_textures[PIECE_COLOR_WHITE][PIECE_TYPE_KING] = LoadTexture("res/white/king.png");
-
-    piece_textures[PIECE_COLOR_BLACK][PIECE_TYPE_PAWN] = LoadTexture("res/black/pawn.png");
-    piece_textures[PIECE_COLOR_BLACK][PIECE_TYPE_KNIGHT] = LoadTexture("res/black/knight.png");
-    piece_textures[PIECE_COLOR_BLACK][PIECE_TYPE_BISHOP] = LoadTexture("res/black/bishop.png");
-    piece_textures[PIECE_COLOR_BLACK][PIECE_TYPE_ROOK] = LoadTexture("res/black/rook.png");
-    piece_textures[PIECE_COLOR_BLACK][PIECE_TYPE_QUEEN] = LoadTexture("res/black/queen.png");
-    piece_textures[PIECE_COLOR_BLACK][PIECE_TYPE_KING] = LoadTexture("res/black/king.png");
-}
+#include "textures.h"
 
 Piece piece_new_empty(void) {
     return (Piece) {
@@ -34,5 +18,24 @@ bool piece_is_empty(Piece piece) {
 }
 
 Texture2D* piece_get_texture(Piece piece) {
-    return piece_is_empty(piece) ? NULL : &piece_textures[piece.color][piece.type];
+    return piece_is_empty(piece) ? NULL : &textures.pieces[piece.color][piece.type];
+}
+
+char piece_get_notation(Piece piece) {
+    switch (piece.type) {
+        case PIECE_TYPE_EMPTY:
+            return ' ';
+        case PIECE_TYPE_PAWN:
+            return '\0';
+        case PIECE_TYPE_KNIGHT:
+            return 'N';
+        case PIECE_TYPE_BISHOP:
+            return 'B';
+        case PIECE_TYPE_ROOK:
+            return 'R';
+        case PIECE_TYPE_QUEEN:
+            return 'Q';
+        case PIECE_TYPE_KING:
+            return 'K';
+    }
 }

@@ -17,3 +17,10 @@ bool pos_is_valid(Pos pos) {
 bool pos_eq(Pos left, Pos right) {
     return left.row == right.row && left.col == right.col;
 }
+
+PosNotation pos_get_notation(Pos pos) {
+    PosNotation notation = { 0 };
+    notation.data[0] = pos.col + 'a';
+    notation.data[1] = (BOARD_SIZE - pos.row) + '0';
+    return notation;
+}
