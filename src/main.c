@@ -10,6 +10,8 @@
 #include "raylib.h"
 
 #include "textures.h"
+#include "fonts.h"
+#include "socket.h"
 #include "pos.h"
 #include "piece.h"
 #include "board.h"
@@ -26,8 +28,21 @@ static void handle_clay_errors(Clay_ErrorData errorData) {
     exit(-1);
 }
 
-int main() {
-    GameState state = state_main_new(board_new_castle());
+int main(int argc, char** argv) {
+    if (socket_startup() == -1) {
+        return -1;
+    }
+
+    MainState main_state = state_main_new(board_new_castle());
+    if (argc == 1) {
+        if (state_main_start_game(&main_state, "localhost", "3490") == SOCKET_INVALID) {
+            return -1;
+        }
+    } else if (state_main_join_game(&main_state, "localhost", "3490") == SOCKET_INVALID) {
+        return -1;
+    }
+
+    GameState state = state_main_wrap(main_state);
 
     const int screen_width = 768;
     const int screen_height = 768;
@@ -36,11 +51,12 @@ int main() {
     SetTargetFPS(60);
     
     textures_init();
+    fonts_init();
 
     uint64_t total_memory_size = Clay_MinMemorySize();
     Clay_Arena arena = Clay_CreateArenaWithCapacityAndMemory(total_memory_size, malloc(total_memory_size));
     Clay_Initialize(arena, (Clay_Dimensions) { screen_width, screen_height }, (Clay_ErrorHandler) { handle_clay_errors });
-    Clay_SetMeasureTextFunction(Raylib_MeasureText, NULL);
+    Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts);
 
     while (!WindowShouldClose()) {
         float delta_time = GetFrameTime();

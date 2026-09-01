@@ -1,5 +1,6 @@
 #include "board.h"
 
+#include <stddef.h>
 #include <assert.h>
 
 Board board_new_normal(void) {

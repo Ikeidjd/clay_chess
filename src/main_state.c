@@ -3,6 +3,30 @@
 #include <stdio.h>
 
 #include "textures.h"
+#include "fonts.h"
+#include "socket.h"
+
+MainState state_main_new(Board board) {
+    return (MainState) {
+        .moves = { 0 },
+        .board = board,
+        .selected_pos = pos_new_invalid(),
+        .can_castle_kingside = true,
+        .can_castle_queenside = true,
+        .host_socket = SOCKET_INVALID,
+        .guest_socket = SOCKET_INVALID,
+    };
+}
+
+sock_t state_main_start_game(MainState* self, const char* host, const char* port) {
+    self->host_socket = socket_start(host, port);
+    return self->host_socket;
+}
+
+sock_t state_main_join_game(MainState* self, const char* host, const char* port) {
+    self->guest_socket = socket_join(host, port);
+    return self->guest_socket;
+}
 
 static void detect_piece_mouse_input(MainState* self, Pos pos) {
     if (!Clay_Hovered()) return;
@@ -19,6 +43,31 @@ static void detect_piece_mouse_input(MainState* self, Pos pos) {
         self->selected_pos = pos_new_invalid();
         self->moves = (MoveBoard) { 0 };
     }
+}
+
+static Clay_RenderCommandArray try_to_connect(MainState* self, float delta_time) {
+    self->guest_socket = socket_try_to_accept(self->host_socket);
+
+    if (socket_would_block(self->guest_socket)) {
+        self->guest_socket = SOCKET_INVALID;
+    }
+
+    Clay_BeginLayout();
+
+    CLAY(CLAY_ID("trying to connect"), (Clay_ElementDeclaration) {
+        .layout = {
+            .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_GROW() },
+            .childAlignment = { CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER },
+        },
+    }) {
+        CLAY_TEXT(CLAY_STRING("Waiting for player 2 to join..."), (Clay_TextElementConfig) {
+            .fontId = FONT_NORMAL,
+            .fontSize = 24,
+            .textColor = { 255, 255, 255, 255 },
+        });
+    }
+
+    return Clay_EndLayout(delta_time);
 }
 
 static void build_piece_layout(MainState* self, Pos pos) {
@@ -62,6 +111,10 @@ static void build_piece_layout(MainState* self, Pos pos) {
 }
 
 Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
+    if (self->host_socket != SOCKET_INVALID && self->guest_socket == SOCKET_INVALID) {
+        return try_to_connect(self, delta_time);
+    }
+
     Clay_BeginLayout();
 
     CLAY(CLAY_ID("panel"), (Clay_ElementDeclaration) {
