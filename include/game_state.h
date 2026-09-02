@@ -12,16 +12,25 @@ typedef struct GameState GameState;
 
 Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state);
 
+#define PROMOTION_OPTIONS_COUNT 4
+
+typedef struct {
+    Pos pos;
+    Piece transgender;
+} PromotionOption;
+
 typedef struct {
     MoveBoard moves;
     Board board;
+    PromotionOption promotion_options[PROMOTION_OPTIONS_COUNT];
+    Move promotion;
     Pos selected_pos;
     PieceColor my_turn;
     PieceColor cur_turn;
-    bool can_castle_kingside;
-    bool can_castle_queenside;
     sock_t host_socket;
     sock_t guest_socket;
+    bool can_castle_kingside;
+    bool can_castle_queenside;
 } MainState;
 
 MainState state_main_new(Board board, PieceColor my_turn);
