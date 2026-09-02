@@ -8,12 +8,19 @@
 #include "socket.h"
 
 MainState state_main_new(Board board, PieceColor my_turn) {
+    MainState state = state_main_new_debug(board);
+    state.my_turn = my_turn;
+    state.cur_turn = PIECE_COLOR_WHITE;
+    return state;
+}
+
+MainState state_main_new_debug(Board board) {
     return (MainState) {
         .moves = { 0 },
         .board = board,
         .selected_pos = pos_new_invalid(),
-        .my_turn = my_turn,
-        .cur_turn = PIECE_COLOR_WHITE,
+        .my_turn = PIECE_COLOR_EMPTY,
+        .cur_turn = PIECE_COLOR_EMPTY,
         .can_castle_kingside = true,
         .can_castle_queenside = true,
         .host_socket = SOCKET_INVALID,
@@ -39,14 +46,26 @@ static bool is_online(MainState* self) {
     return self->host_socket != SOCKET_INVALID || self->guest_socket != SOCKET_INVALID;
 }
 
+static bool is_debug(MainState* self) {
+    return self->cur_turn == PIECE_COLOR_EMPTY || self->my_turn == PIECE_COLOR_EMPTY;
+}
+
+static bool is_my_turn(MainState* self) {
+    return self->cur_turn == self->my_turn || is_debug(self);
+}
+
+static bool is_selectable(MainState* self, PieceColor color) {
+    return color != PIECE_COLOR_EMPTY && (color == self->my_turn || is_debug(self));
+}
+
 static void detect_piece_mouse_input(MainState* self, Pos pos) {
-    if (self->cur_turn != self->my_turn || !Clay_Hovered()) return;
+    if (!is_my_turn(self) || !Clay_Hovered()) return;
 
     Piece piece = board_get(&self->board, pos);
     Move move = move_board_get(&self->moves, pos);
 
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && move_is_empty(move)) {
-        if (piece.color == self->my_turn) {
+        if (is_selectable(self, piece.color)) {
             self->selected_pos = pos;
             self->moves = moves_generate_board(&self->board, pos, self->can_castle_kingside, self->can_castle_queenside);
         } else {
@@ -143,7 +162,7 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
         self->my_turn = self->cur_turn;
     }
 
-    if (self->cur_turn != self->my_turn) {
+    if (!is_my_turn(self)) {
         char buf[MOVE_NOTATION_SIZE] = { 0 };
 
         if (socket_recv(self->guest_socket, buf, MOVE_NOTATION_SIZE, 0) != SOCK_ERROR) {

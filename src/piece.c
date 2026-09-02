@@ -7,6 +7,7 @@
 #include "textures.h"
 
 PieceColor piece_color_swap(PieceColor color) {
+    if (color == PIECE_COLOR_EMPTY) return color;
     return color == PIECE_COLOR_WHITE ? PIECE_COLOR_BLACK : PIECE_COLOR_WHITE;
 }
 

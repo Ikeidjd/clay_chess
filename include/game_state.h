@@ -25,6 +25,7 @@ typedef struct {
 } MainState;
 
 MainState state_main_new(Board board, PieceColor my_turn);
+MainState state_main_new_debug(Board board);
 
 sock_t state_main_start_game(MainState* self, const char* host, const char* port);
 sock_t state_main_join_game(MainState* self, const char* host, const char* port);
