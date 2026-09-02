@@ -20,6 +20,8 @@ typedef enum {
     PIECE_COLOR_BLACK,
 } PieceColor;
 
+PieceColor piece_color_swap(PieceColor color);
+
 typedef struct {
     PieceType type;
     PieceColor color;

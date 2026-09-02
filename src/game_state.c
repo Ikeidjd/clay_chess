@@ -6,6 +6,12 @@
 
 #include "fonts.h"
 
+GameState state_menu_wrap() {
+    return (GameState) {
+        .type = GAME_STATE_MENU,
+    };
+}
+
 GameState state_main_wrap(MainState state) {
     return (GameState) {
         .type = GAME_STATE_MAIN,
@@ -15,6 +21,8 @@ GameState state_main_wrap(MainState state) {
 
 Clay_RenderCommandArray state_update(GameState* self, float delta_time) {
     switch (self->type) {
+        case GAME_STATE_MENU:
+            return state_menu_update(delta_time, self);
         case GAME_STATE_MAIN:
             return state_main_update(&self->as.main, delta_time);
     }

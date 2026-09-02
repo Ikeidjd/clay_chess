@@ -24,7 +24,7 @@ Board board_new_normal(void) {
     board_set(&board, (Pos) { 7, 6 }, (Piece) { .type = PIECE_TYPE_KNIGHT, .color = PIECE_COLOR_WHITE });
     board_set(&board, (Pos) { 7, 7 }, (Piece) { .type = PIECE_TYPE_ROOK, .color = PIECE_COLOR_WHITE });
 
-    for (size_t col = 0; col < BOARD_SIZE; col++) {
+    for (int col = 0; col < BOARD_SIZE; col++) {
         board_set(&board, (Pos) { 1, col }, (Piece) { .type = PIECE_TYPE_PAWN, .color = PIECE_COLOR_BLACK });
         board_set(&board, (Pos) { 6, col }, (Piece) { .type = PIECE_TYPE_PAWN, .color = PIECE_COLOR_WHITE });
     }
@@ -81,10 +81,32 @@ void board_set(Board* board, Pos pos, Piece piece) {
 }
 
 bool board_is_in_bounds(Pos pos) {
-    return pos.row < BOARD_SIZE && pos.col < BOARD_SIZE;
+    return pos.row >= 0 && pos.col >= 0 && pos.row < BOARD_SIZE && pos.col < BOARD_SIZE;
 }
 
 void board_move(Board* board, Pos from, Pos to) {
     board_set(board, to, board_get(board, from));
     board_set(board, from, piece_new_empty());
+}
+
+Piece board_next_piece(const Board* board, Pos* pos) {
+    Piece piece = piece_new_empty();
+
+    if (pos_eq(*pos, pos_new_invalid())) {
+        pos->col = BOARD_SIZE;
+    }
+
+    while (piece_is_empty(piece)) {
+        pos->col++;
+
+        if (pos->col >= BOARD_SIZE) {
+            pos->col = 0;
+            pos->row++;
+        }
+
+        if (!board_is_in_bounds(*pos)) break;
+        piece = board_get(board, *pos);
+    }
+
+    return piece;
 }

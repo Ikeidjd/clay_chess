@@ -193,3 +193,27 @@ sock_t socket_join(const char* host, const char* port) {
 
     return sock_fd;
 }
+
+int socket_send(sock_t s, const char *buf, int len, int flags) {
+    int total_sent = 0;
+
+    while (total_sent < len) {
+        int sent = send(s, buf, len, flags);
+        if (sent == SOCK_ERROR) return sent;
+        total_sent += sent;
+    }
+
+    return total_sent;
+}
+
+int socket_recv(sock_t s, char *buf, int len, int flags) {
+    int total_received = 0;
+
+    while (total_received < len) {
+        int received = recv(s, buf, len, flags);
+        if (received == SOCK_ERROR) return received;
+        total_received += received;
+    }
+
+    return total_received;
+}

@@ -1,8 +1,6 @@
 #pragma once
 
-#include <stddef.h>
-
 typedef struct {
-    size_t row;
-    size_t col;
+    int row;
+    int col;
 } Dir;

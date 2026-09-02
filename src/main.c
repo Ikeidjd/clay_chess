@@ -23,8 +23,8 @@ static Texture2D move_indicator_texture;
 static Texture2D capture_indicator_texture;
 
 static void handle_clay_errors(Clay_ErrorData errorData) {
-    printf("%d", errorData.errorType);
-    printf("%.*s", errorData.errorText.length, errorData.errorText.chars);
+    printf("%d\n", errorData.errorType);
+    printf("%.*s\n", errorData.errorText.length, errorData.errorText.chars);
     exit(-1);
 }
 
@@ -33,16 +33,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    MainState main_state = state_main_new(board_new_castle());
-    if (argc == 1) {
-        if (state_main_start_game(&main_state, "localhost", "3490") == SOCKET_INVALID) {
-            return -1;
-        }
-    } else if (state_main_join_game(&main_state, "localhost", "3490") == SOCKET_INVALID) {
-        return -1;
-    }
-
-    GameState state = state_main_wrap(main_state);
+    GameState state = state_menu_wrap();
 
     const int screen_width = 768;
     const int screen_height = 768;

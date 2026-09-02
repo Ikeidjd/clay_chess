@@ -6,6 +6,10 @@
 
 #include "textures.h"
 
+PieceColor piece_color_swap(PieceColor color) {
+    return color == PIECE_COLOR_WHITE ? PIECE_COLOR_BLACK : PIECE_COLOR_WHITE;
+}
+
 Piece piece_new_empty(void) {
     return (Piece) {
         .type = PIECE_TYPE_EMPTY,

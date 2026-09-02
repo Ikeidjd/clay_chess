@@ -25,3 +25,6 @@ sock_t socket_try_to_accept(sock_t sock_fd); // If obtained from socket_start, s
 sock_t socket_join(const char* host, const char* port);
 
 bool socket_would_block(sock_t sock_fd);
+
+int socket_send(sock_t s, const char *buf, int len, int flags);
+int socket_recv(sock_t s, char *buf, int len, int flags);
