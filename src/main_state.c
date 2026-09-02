@@ -31,6 +31,14 @@ sock_t state_main_join_game(MainState* self, const char* host, const char* port)
     return self->guest_socket;
 }
 
+static bool should_try_to_connect(MainState* self) {
+    return self->host_socket != SOCKET_INVALID && self->guest_socket == SOCKET_INVALID;
+}
+
+static bool is_online(MainState* self) {
+    return self->host_socket != SOCKET_INVALID || self->guest_socket != SOCKET_INVALID;
+}
+
 static void detect_piece_mouse_input(MainState* self, Pos pos) {
     if (self->cur_turn != self->my_turn || !Clay_Hovered()) return;
 
@@ -46,9 +54,11 @@ static void detect_piece_mouse_input(MainState* self, Pos pos) {
             self->moves = move_board_new();
         }
     } else if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && !move_is_empty(move)) {
-        MoveNotation notation = move_get_notation(&self->board, move);
-        socket_send(self->guest_socket, notation.data, MOVE_NOTATION_SIZE, 0);
-        printf("Message sent: %s\n", notation.data);
+        if (is_online(self)) {
+            MoveNotation notation = move_get_notation(&self->board, move);
+            socket_send(self->guest_socket, notation.data, MOVE_NOTATION_SIZE, 0);
+            printf("Message sent: %s\n", notation.data);
+        }
 
         move_execute(&self->board, move);
 
@@ -125,8 +135,12 @@ static void build_piece_layout(MainState* self, Pos pos) {
 }
 
 Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
-    if (self->host_socket != SOCKET_INVALID && self->guest_socket == SOCKET_INVALID) {
+    if (should_try_to_connect(self)) {
         return try_to_connect(self, delta_time);
+    }
+
+    if (!is_online(self)) {
+        self->my_turn = self->cur_turn;
     }
 
     if (self->cur_turn != self->my_turn) {

@@ -10,6 +10,8 @@
 
 typedef struct GameState GameState;
 
+Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state);
+
 typedef struct {
     MoveBoard moves;
     Board board;
@@ -28,8 +30,6 @@ sock_t state_main_start_game(MainState* self, const char* host, const char* port
 sock_t state_main_join_game(MainState* self, const char* host, const char* port);
 
 Clay_RenderCommandArray state_main_update(MainState* self, float delta_time);
-
-Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state);
 
 typedef enum {
     GAME_STATE_MENU,
