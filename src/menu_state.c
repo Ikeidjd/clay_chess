@@ -17,9 +17,9 @@ Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
         }) { \
             if (Clay_Hovered() && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) { \
                 if (color == PIECE_COLOR_EMPTY) { \
-                    *state = state_main_wrap(state_main_new(board_new_pawnless(), PIECE_COLOR_WHITE)); \
+                    *state = state_main_wrap(state_main_new(board_new_normal(), PIECE_COLOR_WHITE)); \
                 } else { \
-                    MainState next_state = state_main_new(board_new_pawnless(), color); \
+                    MainState next_state = state_main_new(board_new_normal(), color); \
                     if (state_main_ ## start_or_join ## _game(&next_state, "localhost", "3940") != SOCKET_INVALID) *state = state_main_wrap(next_state); \
                 } \
             } \

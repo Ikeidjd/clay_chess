@@ -31,5 +31,5 @@ void move_board_set(MoveBoard* moves, Pos pos, Move move);
 
 MoveBoard move_array_to_board(const MoveArray* array);
 
-MoveArray moves_generate(const Board* board, Pos pos, bool can_castle_kingside, bool can_castle_queenside);
+MoveArray moves_generate_array(const Board* board, Pos pos, bool can_castle_kingside, bool can_castle_queenside);
 MoveBoard moves_generate_board(const Board* board, Pos pos, bool can_castle_kingside, bool can_castle_queenside);

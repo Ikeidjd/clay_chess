@@ -30,6 +30,7 @@ typedef struct {
 Piece piece_new_empty(void);
 
 bool piece_is_empty(Piece piece);
-Texture2D* piece_get_texture(Piece piece);
+bool piece_is_enemy(Piece piece, Piece other);
 
+Texture2D* piece_get_texture(Piece piece);
 char piece_get_notation(Piece piece);

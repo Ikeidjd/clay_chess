@@ -152,7 +152,7 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
 
             Pos pos = pos_new_invalid();
             while (!piece_is_empty(board_next_piece(&self->board, &pos))) {
-                MoveArray moves = moves_generate(&self->board, pos, self->can_castle_kingside, self->can_castle_queenside);
+                MoveArray moves = moves_generate_array(&self->board, pos, self->can_castle_kingside, self->can_castle_queenside);
 
                 for (size_t i = 0; i < moves.count; i++) {
                     Move move = move_array_get(&moves, i);

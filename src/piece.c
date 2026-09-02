@@ -21,6 +21,10 @@ bool piece_is_empty(Piece piece) {
     return piece.type == PIECE_TYPE_EMPTY || piece.color == PIECE_COLOR_EMPTY;
 }
 
+bool piece_is_enemy(Piece piece, Piece other) {
+    return !piece_is_empty(piece) && !piece_is_empty(other) && piece.color != other.color;
+}
+
 Texture2D* piece_get_texture(Piece piece) {
     return piece_is_empty(piece) ? NULL : &textures.pieces[piece.color][piece.type];
 }
