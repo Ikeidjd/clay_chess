@@ -86,7 +86,7 @@ static void detect_piece_mouse_input(MainState* self, Pos pos) {
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && move_is_empty(move)) {
         if (is_selectable(self, piece.color)) {
             self->selected_pos = pos;
-            self->moves = moves_generate_board(&self->board, pos, self->can_castle_kingside, self->can_castle_queenside);
+            self->moves = moves_generate_board(&self->board, pos);
         } else {
             self->selected_pos = pos_new_invalid();
             self->moves = move_board_new();
@@ -112,7 +112,7 @@ static Clay_RenderCommandArray try_to_connect(MainState* self, float delta_time)
 
     CLAY(CLAY_ID("trying to connect"), (Clay_ElementDeclaration) {
         .layout = {
-            .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_GROW() },
+            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
             .childAlignment = { CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER },
         },
     }) {
@@ -129,7 +129,7 @@ static Clay_RenderCommandArray try_to_connect(MainState* self, float delta_time)
 static void build_promotion_option_layout(MainState* self, PromotionOption option) {
     CLAY(CLAY_IDI("board_piece", option.pos.row * 8 + option.pos.col), (Clay_ElementDeclaration) {
         .layout = {
-            .sizing = { CLAY_SIZING_GROW() },
+            .sizing = { CLAY_SIZING_GROW(0), { 0 } },
         },
         .image = { piece_get_texture(option.transgender) },
         .aspectRatio = { 1 },
@@ -146,7 +146,7 @@ static void build_piece_layout(MainState* self, Pos pos) {
 
     CLAY(CLAY_IDI("board_piece", pos.row * 8 + pos.col), (Clay_ElementDeclaration) {
         .layout = {
-            .sizing = { CLAY_SIZING_GROW() },
+            .sizing = { CLAY_SIZING_GROW(0), { 0 } },
         },
         .image = { piece_get_texture(piece) },
         .aspectRatio = { 1 },
@@ -158,7 +158,7 @@ static void build_piece_layout(MainState* self, Pos pos) {
         if (!move_is_empty(move)) {
             CLAY(CLAY_IDI("move_indicator", pos.row * 8 + pos.col), (Clay_ElementDeclaration) {
                 .layout = {
-                    .sizing = { CLAY_SIZING_GROW() }
+                    .sizing = { CLAY_SIZING_GROW(0), { 0 } }
                 },
                 .image = { piece_is_empty(piece) ? &textures.move_indicator : &textures.capture_indicator },
                 .aspectRatio = { 1 },
@@ -185,6 +185,8 @@ static void build_board_square_layout(MainState* self, Pos pos) {
 
     if (optional_option != NULL) {
         square_color = (Clay_Color) { 255, 255, 255, 255 };
+    } else if(self->is_en_passant_visible && pos_eq(self->board.en_passant, pos)) {
+        square_color = (Clay_Color) { 160, 0, 0, 255 };
     } else if (pos_eq(self->selected_pos, pos)) {
         square_color = (Clay_Color) { 160, 160, 0, 255 };
     } else {
@@ -193,7 +195,7 @@ static void build_board_square_layout(MainState* self, Pos pos) {
 
     CLAY(CLAY_IDI("board_square", pos.row * 8 + pos.col), (Clay_ElementDeclaration) {
         .layout = {
-            .sizing = { CLAY_SIZING_PERCENT(0.125) },
+            .sizing = { CLAY_SIZING_PERCENT(0.125), { 0 } },
         },
         .backgroundColor = square_color,
         .aspectRatio = { 1 },

@@ -9,17 +9,18 @@ Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
     do { \
         CLAY(CLAY_ID(button_id), (Clay_ElementDeclaration) { \
             .layout = { \
-                .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_GROW() }, \
+                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) }, \
                 .childAlignment = { CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER }, \
                 .padding = CLAY_PADDING_ALL(16), \
             }, \
             .backgroundColor = { 100, 100, 255, 255 }, \
         }) { \
             if (Clay_Hovered() && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) { \
+                Board board = board_new_normal(); \
                 if (color == PIECE_COLOR_EMPTY) { \
-                    *state = state_main_wrap(is_debug ? state_main_new_debug(board_new_normal()) : state_main_new(board_new_normal(), PIECE_COLOR_WHITE)); \
+                    *state = state_main_wrap(is_debug ? state_main_new_debug(board) : state_main_new(board, PIECE_COLOR_WHITE)); \
                 } else { \
-                    MainState next_state = state_main_new(board_new_normal(), color); \
+                    MainState next_state = state_main_new(board, color); \
                     if (state_main_ ## start_or_join ## _game(&next_state, "localhost", "3940") != SOCKET_INVALID) *state = state_main_wrap(next_state); \
                 } \
             } \
@@ -34,7 +35,7 @@ Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
 
     CLAY(CLAY_ID("panel"), (Clay_ElementDeclaration) {
         .layout = {
-            .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_GROW() },
+            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
             .layoutDirection = CLAY_LEFT_TO_RIGHT,
             .childAlignment = { .y = CLAY_ALIGN_Y_CENTER },
             .padding = CLAY_PADDING_ALL(16),
@@ -42,7 +43,7 @@ Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
     }) {
         CLAY(CLAY_ID("buttons"), (Clay_ElementDeclaration) {
             .layout = {
-                .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIT() },
+                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
                 .layoutDirection = CLAY_LEFT_TO_RIGHT,
                 .childGap = 16,
             },
@@ -54,7 +55,7 @@ Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
         }
     }
 
-    #undef SIDE
+    #undef BUTTON
 
     return Clay_EndLayout(delta_time);
 }

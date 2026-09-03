@@ -47,6 +47,8 @@ MoveBoard move_array_to_board(const MoveArray* array) {
                 exit(-1);
                 break;
             case MOVE_NORMAL:
+            case MOVE_PAWN_DOUBLE:
+            case MOVE_EN_PASSANT:
                 pos = move.as.normal.to;
                 break;
             case MOVE_CASTLE:
@@ -174,7 +176,8 @@ static void maybe_insert_promotion(const Board* board, MoveArray* moves, MoveNor
     move_array_insert(moves, move_new_promotion(move, (Piece) { .type = PIECE_TYPE_QUEEN, .color = pawn.color }));
 }
 
-static void moves_generate_pawn(const Board* board, MoveArray* moves, Pos from, Pos en_passant) {
+static void moves_generate_pawn(const Board* board, MoveArray* moves, Pos from) {
+    printf("%d, %d\n", board->en_passant.row, board->en_passant.col);
     Piece pawn = board_get(board, from);
 
     Dir forward = { -1, 0 };
@@ -192,23 +195,28 @@ static void moves_generate_pawn(const Board* board, MoveArray* moves, Pos from, 
         maybe_insert_promotion(board, moves, (MoveNormal) { from, move_to });
 
         if (from.row == initial_row && board_is_in_bounds(move_to_double) && piece_is_empty(board_get(board, move_to_double))) {
-            maybe_insert_promotion(board, moves, (MoveNormal) { from, move_to_double });
+            move_array_insert(moves, move_new_pawn_double(from, move_to_double));
         }
     }
 
-    Pos capture_to_left = pos_plus_dir(move_to, (Dir) { 0, -1 });
-    Pos capture_to_right = pos_plus_dir(move_to, (Dir) { 0, 1 });
+    Pos capture_to = pos_plus_dir(move_to, (Dir) { 0, -1 });
 
-    if (board_is_in_bounds(capture_to_left) && piece_is_enemy(pawn, board_get(board, capture_to_left))) {
-        maybe_insert_promotion(board, moves, (MoveNormal) { from, capture_to_left });
+    if (pos_eq(capture_to, board->en_passant)) {
+        move_array_insert(moves, move_new_en_passant(from, capture_to));
+    } else if (board_is_in_bounds(capture_to) && piece_is_enemy(pawn, board_get(board, capture_to))) {
+        maybe_insert_promotion(board, moves, (MoveNormal) { from, capture_to });
     }
 
-    if (board_is_in_bounds(capture_to_right) && piece_is_enemy(pawn, board_get(board, capture_to_right))) {
-        maybe_insert_promotion(board, moves, (MoveNormal) { from, capture_to_right });
+    capture_to = pos_plus_dir(move_to, (Dir) { 0, 1 });
+
+    if (pos_eq(capture_to, board->en_passant)) {
+        move_array_insert(moves, move_new_en_passant(from, capture_to));
+    } else if (board_is_in_bounds(capture_to) && piece_is_enemy(pawn, board_get(board, capture_to))) {
+        maybe_insert_promotion(board, moves, (MoveNormal) { from, capture_to });
     }
 }
 
-MoveArray moves_generate_array(const Board* board, Pos pos, bool can_castle_kingside, bool can_castle_queenside) {
+MoveArray moves_generate_array(const Board* board, Pos pos) {
     MoveArray moves = move_array_new();
     Piece piece = board_get(board, pos);
 
@@ -216,7 +224,7 @@ MoveArray moves_generate_array(const Board* board, Pos pos, bool can_castle_king
         case PIECE_TYPE_EMPTY:
             break;
         case PIECE_TYPE_PAWN:
-            moves_generate_pawn(board, &moves, pos, pos_new_invalid());
+            moves_generate_pawn(board, &moves, pos);
             break;
         case PIECE_TYPE_KNIGHT:
             moves_generate_single(board, &moves, pos, knight_dirs, sizeof(knight_dirs) / sizeof(knight_dirs[0]));
@@ -232,15 +240,15 @@ MoveArray moves_generate_array(const Board* board, Pos pos, bool can_castle_king
             break;
         case PIECE_TYPE_KING:
             moves_generate_single(board, &moves, pos, cardinal_dirs, sizeof(cardinal_dirs) / sizeof(cardinal_dirs[0]));
-            moves_generate_castle(board, &moves, pos, kingside, can_castle_kingside);
-            moves_generate_castle(board, &moves, pos, queenside, can_castle_queenside);
+            moves_generate_castle(board, &moves, pos, kingside, board_can_castle_kingside(board, piece.color));
+            moves_generate_castle(board, &moves, pos, queenside, board_can_castle_queenside(board, piece.color));
             break;
     }
 
     return moves;
 }
 
-MoveBoard moves_generate_board(const Board* board, Pos pos, bool can_castle_kingside, bool can_castle_queenside) {
-    MoveArray array = moves_generate_array(board, pos, can_castle_kingside, can_castle_queenside);
+MoveBoard moves_generate_board(const Board* board, Pos pos) {
+    MoveArray array = moves_generate_array(board, pos);
     return move_array_to_board(&array);
 }

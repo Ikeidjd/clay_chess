@@ -29,8 +29,7 @@ typedef struct {
     PieceColor cur_turn;
     sock_t host_socket;
     sock_t guest_socket;
-    bool can_castle_kingside;
-    bool can_castle_queenside;
+    bool is_en_passant_visible;
 } MainState;
 
 MainState state_main_new(Board board, PieceColor my_turn);

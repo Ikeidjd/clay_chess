@@ -19,6 +19,20 @@ Move move_castle_wrap(MoveCastle move) {
     };
 }
 
+Move move_pawn_double_wrap(MoveNormal move) {
+    return (Move) {
+        .type = MOVE_PAWN_DOUBLE,
+        .as.pawn_double = move,
+    };
+}
+
+Move move_en_passant_wrap(MoveNormal move) {
+    return (Move) {
+        .type = MOVE_EN_PASSANT,
+        .as.en_passant = move,
+    };
+}
+
 Move move_promotion_wrap(MovePromotion move) {
     return (Move) {
         .type = MOVE_PROMOTION,
@@ -46,6 +60,20 @@ Move move_new_castle(MoveNormal king_move, MoveNormal rook_move) {
     });
 }
 
+Move move_new_pawn_double(Pos from, Pos to) {
+    return move_pawn_double_wrap((MoveNormal) {
+        .from = from,
+        .to = to,
+    });
+}
+
+Move move_new_en_passant(Pos from, Pos to) {
+    return move_en_passant_wrap((MoveNormal) {
+        .from = from,
+        .to = to,
+    });
+}
+
 Move move_new_promotion(MoveNormal move, Piece transgender) {
     return move_promotion_wrap((MovePromotion) {
         .move = move,
@@ -58,17 +86,49 @@ bool move_is_empty(Move move) {
 }
 
 void move_execute(Board* board, Move move) {
+    board->en_passant = pos_new_invalid();
+
     switch (move.type) {
         case MOVE_EMPTY:
             fprintf(stderr, "Empty move cannot be executed");
             exit(-1);
             break;
-        case MOVE_NORMAL:
+        case MOVE_NORMAL: {
+            Piece piece = board_get(board, move.as.normal.from);
+
+            switch (piece.type) {
+                case PIECE_TYPE_KING:
+                    board_disable_can_castle_kingside(board, piece.color);
+                    board_disable_can_castle_queenside(board, piece.color);
+                    break;
+                case PIECE_TYPE_ROOK:
+                    if (move.as.normal.from.col < BOARD_SIZE / 2) {
+                        board_disable_can_castle_queenside(board, piece.color);
+                    } else {
+                        board_disable_can_castle_kingside(board, piece.color);
+                    }
+
+                    break;
+                default:
+                    break;
+            }
+
             board_move(board, move.as.normal.from, move.as.normal.to);
             break;
+        }
         case MOVE_CASTLE:
             move_execute(board, move_normal_wrap(move.as.castle.king_move));
             move_execute(board, move_normal_wrap(move.as.castle.rook_move));
+            break;
+        case MOVE_PAWN_DOUBLE:
+            move_execute(board, move_normal_wrap(move.as.pawn_double));
+            board->en_passant.row = (move.as.pawn_double.from.row + move.as.pawn_double.to.row) / 2;
+            board->en_passant.col = (move.as.pawn_double.from.col + move.as.pawn_double.to.col) / 2;
+            break;
+        case MOVE_EN_PASSANT:
+            move_execute(board, move_normal_wrap(move.as.en_passant));
+            board_set(board, pos_plus_dir(move.as.en_passant.to, (Dir) { -1, 0 }), piece_new_empty());
+            board_set(board, pos_plus_dir(move.as.en_passant.to, (Dir) { 1, 0 }), piece_new_empty());
             break;
         case MOVE_PROMOTION:
             move_execute(board, move_normal_wrap(move.as.promotion.move));
@@ -100,6 +160,8 @@ MoveNotation move_get_notation(const Board* board, Move move) {
             exit(-1);
             break;
         case MOVE_NORMAL:
+        case MOVE_PAWN_DOUBLE:
+        case MOVE_EN_PASSANT:
             INSERT_CHAR(piece_get_notation(board_get(board, move.as.normal.from)));
             INSERT(pos_get_notation(move.as.normal.from).data);
             INSERT(pos_get_notation(move.as.normal.to).data);

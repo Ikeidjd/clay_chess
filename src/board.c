@@ -3,8 +3,19 @@
 #include <stddef.h>
 #include <assert.h>
 
+Board board_new_empty(void) {
+    return (Board) {
+        .pieces = { 0 },
+        .en_passant = pos_new_invalid(),
+        .can_castle_kingside_white = true,
+        .can_castle_queenside_white = true,
+        .can_castle_kingside_black = true,
+        .can_castle_queenside_black = true,
+    };
+}
+
 Board board_new_normal(void) {
-    Board board = { 0 };
+    Board board = board_new_empty();
 
     board_set(&board, (Pos) { 0, 0 }, (Piece) { .type = PIECE_TYPE_ROOK, .color = PIECE_COLOR_BLACK });
     board_set(&board, (Pos) { 0, 1 }, (Piece) { .type = PIECE_TYPE_KNIGHT, .color = PIECE_COLOR_BLACK });
@@ -33,7 +44,7 @@ Board board_new_normal(void) {
 }
 
 Board board_new_pawnless(void) {
-    Board board = { 0 };
+    Board board = board_new_empty();
 
     board_set(&board, (Pos) { 0, 0 }, (Piece) { .type = PIECE_TYPE_ROOK, .color = PIECE_COLOR_BLACK });
     board_set(&board, (Pos) { 0, 1 }, (Piece) { .type = PIECE_TYPE_KNIGHT, .color = PIECE_COLOR_BLACK });
@@ -57,7 +68,7 @@ Board board_new_pawnless(void) {
 }
 
 Board board_new_castle(void) {
-    Board board = { 0 };
+    Board board = board_new_empty();
 
     board_set(&board, (Pos) { 0, 0 }, (Piece) { .type = PIECE_TYPE_ROOK, .color = PIECE_COLOR_BLACK });
     board_set(&board, (Pos) { 0, 4 }, (Piece) { .type = PIECE_TYPE_KING, .color = PIECE_COLOR_BLACK });
@@ -109,4 +120,22 @@ Piece board_next_piece(const Board* board, Pos* pos) {
     }
 
     return piece;
+}
+
+bool board_can_castle_kingside(const Board* board, PieceColor color) {
+    return color == PIECE_COLOR_WHITE ? board->can_castle_kingside_white : board->can_castle_kingside_black;
+}
+
+void board_disable_can_castle_kingside(Board* board, PieceColor color) {
+    bool* can_castle_kingside = color == PIECE_COLOR_WHITE ? &board->can_castle_kingside_white : &board->can_castle_kingside_black;
+    *can_castle_kingside = false;
+}
+
+bool board_can_castle_queenside(const Board* board, PieceColor color) {
+    return color == PIECE_COLOR_WHITE ? board->can_castle_queenside_white : board->can_castle_queenside_black;
+}
+
+void board_disable_can_castle_queenside(Board* board, PieceColor color) {
+    bool* can_castle_queenside = color == PIECE_COLOR_WHITE ? &board->can_castle_queenside_white : &board->can_castle_queenside_black;
+    *can_castle_queenside = false;
 }

@@ -26,8 +26,7 @@ MainState state_main_new_debug(Board board) {
         .cur_turn = PIECE_COLOR_EMPTY,
         .host_socket = SOCKET_INVALID,
         .guest_socket = SOCKET_INVALID,
-        .can_castle_kingside = true,
-        .can_castle_queenside = true,
+        .is_en_passant_visible = false,
     };
 }
 
@@ -58,8 +57,11 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
             self->cur_turn = piece_color_swap(self->cur_turn);
 
             Pos pos = pos_new_invalid();
-            while (!piece_is_empty(board_next_piece(&self->board, &pos))) {
-                MoveArray moves = moves_generate_array(&self->board, pos, self->can_castle_kingside, self->can_castle_queenside);
+            Piece piece;
+            while (!piece_is_empty(piece = board_next_piece(&self->board, &pos))) {
+                if (piece.color == self->my_turn) continue;
+
+                MoveArray moves = moves_generate_array(&self->board, pos);
 
                 for (size_t i = 0; i < moves.count; i++) {
                     Move move = move_array_get(&moves, i);
@@ -74,21 +76,25 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
         }
     }
 
+    if (IsKeyReleased(KEY_F1)) {
+        self->is_en_passant_visible = !self->is_en_passant_visible;
+    }
+
     Clay_BeginLayout();
 
     CLAY(CLAY_ID("panel"), (Clay_ElementDeclaration) {
         .layout = {
-            .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_GROW() },
+            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
             .childAlignment = { CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER }
         },
         .backgroundColor = { 120, 120, 160, 255 },
     }) {
         CLAY(CLAY_ID("board"), (Clay_ElementDeclaration) {
             .layout = {
-                .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_GROW() },
+                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
                 .layoutDirection = CLAY_TOP_TO_BOTTOM,
             },
-            .aspectRatio = 1,
+            .aspectRatio = { 1 },
         }) {
             for (int unprocessed_row = 0; unprocessed_row < BOARD_SIZE; unprocessed_row++) {
                 int row = unprocessed_row;
@@ -96,7 +102,7 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
 
                 CLAY(CLAY_IDI("board_row", row), (Clay_ElementDeclaration) {
                     .layout = {
-                        .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_PERCENT(0.125) },
+                        .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_PERCENT(0.125) },
                     },
                 })
 

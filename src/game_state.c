@@ -6,7 +6,7 @@
 
 #include "fonts.h"
 
-GameState state_menu_wrap() {
+GameState state_menu_wrap(void) {
     return (GameState) {
         .type = GAME_STATE_MENU,
     };

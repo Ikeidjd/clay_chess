@@ -143,7 +143,7 @@ sock_t socket_try_to_accept(sock_t sock_fd) {
 
     sock_t new_sock_fd = accept(sock_fd, (struct sockaddr*) &addr, &addrlen);
 
-    if (new_sock_fd == SOCK_ERROR) {
+    if (new_sock_fd == (sock_t) SOCK_ERROR) {
         perror("accept error");
         return SOCKET_INVALID;
     }
