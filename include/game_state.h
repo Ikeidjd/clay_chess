@@ -25,6 +25,7 @@ typedef struct {
     PromotionOption promotion_options[PROMOTION_OPTIONS_COUNT];
     Move promotion;
     Pos selected_pos;
+    Pos check_pos;
     PieceColor my_turn;
     PieceColor cur_turn;
     sock_t host_socket;

@@ -22,6 +22,7 @@ MainState state_main_new_debug(Board board) {
         .promotion_options = { 0 },
         .promotion = { 0 },
         .selected_pos = pos_new_invalid(),
+        .check_pos = pos_new_invalid(),
         .my_turn = PIECE_COLOR_EMPTY,
         .cur_turn = PIECE_COLOR_EMPTY,
         .host_socket = SOCKET_INVALID,
@@ -55,8 +56,6 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
 
         if (socket_recv(self->guest_socket, buf, MOVE_NOTATION_SIZE, 0) != SOCK_ERROR) {
             printf("Message received: %s\n", buf);
-            self->cur_turn = piece_color_swap(self->cur_turn);
-
             Pos pos = pos_new_invalid();
 
             while (board_next_piece(&self->board, &pos)) {
@@ -69,7 +68,7 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
                     MoveNotation notation = move_get_notation(&self->board, move);
 
                     if (strcmp(notation.data, buf) == 0) {
-                        move_execute(&self->board, move);
+                        perform_move(self, move);
                         break;
                     }
                 }

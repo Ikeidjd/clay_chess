@@ -6,6 +6,7 @@
 
 #include "textures.h"
 #include "fonts.h"
+#include "sounds.h"
 #include "socket.h"
 
 static bool should_try_to_connect(MainState* self) {
@@ -32,19 +33,54 @@ static bool is_selectable(MainState* self, PieceColor color) {
     return color != PIECE_COLOR_EMPTY && (color == self->my_turn || is_debug(self));
 }
 
+static Sound get_move_sound_effect(MainState* self, Move move) {
+    switch (move.type) {
+        case MOVE_EMPTY:
+            fprintf(stderr, "Empty move has no sound associated\n");
+            exit(-1);
+            break;
+        case MOVE_NORMAL:
+        case MOVE_PAWN_DOUBLE:
+        case MOVE_EN_PASSANT:
+            return piece_is_empty(board_get(&self->board, move.as.normal.to)) ? sounds.move : sounds.capture;
+        case MOVE_CASTLE:
+            return sounds.castle;
+        case MOVE_PROMOTION:
+            return get_move_sound_effect(self, move_normal_wrap(move.as.promotion.move));
+    }
+}
+
+static void check_check(MainState* self) {
+    if (move_is_legal(self->board, move_new_empty(), self->cur_turn)) {
+        self->check_pos = pos_new_invalid();
+        return;
+    }
+
+    self->check_pos = board_get_king(&self->board, self->cur_turn);
+    PlaySound(sounds.check);
+}
+
 static void perform_move(MainState* self, Move move) {
-    if (is_online(self)) {
+    if (is_online(self) && is_my_turn(self)) {
         MoveNotation notation = move_get_notation(&self->board, move);
         socket_send(self->guest_socket, notation.data, MOVE_NOTATION_SIZE, 0);
         printf("Message sent: %s\n", notation.data);
     }
 
+    Sound sound = get_move_sound_effect(self, move); // Important to put this before move_execute, otherwise, it can't tell if it's a capture
     move_execute(&self->board, move);
 
     self->selected_pos = pos_new_invalid();
     self->moves = move_board_new();
 
     self->cur_turn = piece_color_swap(self->cur_turn);
+
+    check_check(self);
+
+    // Only play the move sound effect if there isn't already a check sound effect
+    if (!pos_is_valid(self->check_pos)) {
+        PlaySound(sound);
+    }
 }
 
 static void begin_promotion(MainState* self, MovePromotion move) {
@@ -185,7 +221,7 @@ static void build_board_square_layout(MainState* self, Pos pos) {
 
     if (optional_option != NULL) {
         square_color = (Clay_Color) { 255, 255, 255, 255 };
-    } else if (self->is_en_passant_visible && pos_eq(self->board.en_passant, pos)) {
+    } else if (pos_eq(self->check_pos, pos) || self->is_en_passant_visible && pos_eq(self->board.en_passant, pos)) {
         square_color = (Clay_Color) { 160, 0, 0, 255 };
     } else if (pos_eq(self->selected_pos, pos)) {
         square_color = (Clay_Color) { 160, 160, 0, 255 };

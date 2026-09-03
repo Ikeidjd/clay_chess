@@ -15,7 +15,7 @@ Pos pos_between(Pos left, Pos right) {
 }
 
 bool pos_is_valid(Pos pos) {
-    return pos.row < BOARD_SIZE && pos.col < BOARD_SIZE;
+    return pos.row >= 0 && pos.col >= 0 && pos.row < BOARD_SIZE && pos.col < BOARD_SIZE;
 }
 
 bool pos_eq(Pos left, Pos right) {

@@ -11,6 +11,7 @@
 
 #include "textures.h"
 #include "fonts.h"
+#include "sounds.h"
 #include "socket.h"
 #include "pos.h"
 #include "piece.h"
@@ -40,9 +41,10 @@ int main(int argc, char** argv) {
 
     Clay_Raylib_Initialize(screen_width, screen_height, "Clay Test", FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(60);
-    
+
     textures_init();
     fonts_init();
+    sounds_init();
 
     uint64_t total_memory_size = Clay_MinMemorySize();
     Clay_Arena arena = Clay_CreateArenaWithCapacityAndMemory(total_memory_size, malloc(total_memory_size));
@@ -62,6 +64,7 @@ int main(int argc, char** argv) {
         state_draw(render_commands);
     }
 
+    sounds_destroy();
     CloseWindow();
 
     return 0;

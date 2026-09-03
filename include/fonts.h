@@ -8,8 +8,6 @@
 
 extern Font fonts[FONTS_SIZE];
 
-typedef uint16_t FontId;
-
 extern enum FontIds {
     FONT_NORMAL,
 } font_ids;

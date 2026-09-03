@@ -6,7 +6,12 @@ Font fonts[FONTS_SIZE] = { 0 };
 
 enum FontIds font_ids;
 
+#define LOAD(id, name) \
+do { \
+    fonts[id] = LoadFontEx("res/fonts/" name ".ttf", 96, NULL, 0); \
+    SetTextureFilter(fonts[id].texture, TEXTURE_FILTER_BILINEAR); \
+} while(0)
+
 void fonts_init(void) {
-    fonts[FONT_NORMAL] = LoadFontEx("res/Roboto-Regular.ttf", 96, NULL, 0);
-    SetTextureFilter(fonts[FONT_NORMAL].texture, TEXTURE_FILTER_BILINEAR);
+    LOAD(FONT_NORMAL, "Roboto-Regular");
 }

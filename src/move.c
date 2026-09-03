@@ -2,8 +2,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <assert.h>
 
 #include "move_generation.h"
 
@@ -154,9 +152,7 @@ void move_execute(Board* board, Move move) {
     board->en_passant = pos_new_invalid();
 
     switch (move.type) {
-        case MOVE_EMPTY:
-            fprintf(stderr, "Empty move cannot be executed");
-            exit(-1);
+        case MOVE_EMPTY: // Actually, there is nothing wrong with executing an empty move. It can be used for check detection without doing a move first
             break;
         case MOVE_NORMAL: {
             Piece piece = board_get(board, move.as.normal.from);
