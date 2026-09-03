@@ -185,7 +185,7 @@ static void build_board_square_layout(MainState* self, Pos pos) {
 
     if (optional_option != NULL) {
         square_color = (Clay_Color) { 255, 255, 255, 255 };
-    } else if(self->is_en_passant_visible && pos_eq(self->board.en_passant, pos)) {
+    } else if (self->is_en_passant_visible && pos_eq(self->board.en_passant, pos)) {
         square_color = (Clay_Color) { 160, 0, 0, 255 };
     } else if (pos_eq(self->selected_pos, pos)) {
         square_color = (Clay_Color) { 160, 160, 0, 255 };
