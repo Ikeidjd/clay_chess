@@ -102,6 +102,35 @@ bool move_is_legal(Board board, Move move, PieceColor king_color) {
         for (size_t i = 0; i < moves.count; i++) {
             Move enemy_move = move_array_get(&moves, i);
 
+            if (move.type == MOVE_CASTLE) {
+                Pos king_pos_start = move.as.castle.king_move.from;
+                Pos king_pos_through = pos_between(king_pos_start, king_pos);
+
+                switch (enemy_move.type) {
+                    case MOVE_NORMAL:
+                        if (pos_eq(enemy_move.as.normal.to, king_pos_start)
+                            || pos_eq(enemy_move.as.normal.to, king_pos_through)
+                            || pos_eq(enemy_move.as.normal.to, king_pos)
+                        ) return false;
+
+                        break;
+                    case MOVE_PROMOTION:
+                        if (pos_eq(enemy_move.as.promotion.move.to, king_pos_start)
+                            || pos_eq(enemy_move.as.promotion.move.to, king_pos_through)
+                            || pos_eq(enemy_move.as.promotion.move.to, king_pos)
+                        ) return false;
+
+                        break;
+                    case MOVE_EMPTY:
+                    case MOVE_CASTLE:
+                    case MOVE_PAWN_DOUBLE:
+                    case MOVE_EN_PASSANT:
+                        break;
+                }
+
+                continue;
+            }
+
             switch (enemy_move.type) {
                 case MOVE_NORMAL:
                     if (pos_eq(enemy_move.as.normal.to, king_pos)) return false;
@@ -167,8 +196,7 @@ void move_execute(Board* board, Move move) {
             break;
         case MOVE_PAWN_DOUBLE:
             move_execute(board, move_normal_wrap(move.as.pawn_double));
-            board->en_passant.row = (move.as.pawn_double.from.row + move.as.pawn_double.to.row) / 2;
-            board->en_passant.col = (move.as.pawn_double.from.col + move.as.pawn_double.to.col) / 2;
+            board->en_passant = pos_between(move.as.pawn_double.from, move.as.pawn_double.to);
             break;
         case MOVE_EN_PASSANT:
             move_execute(board, move_normal_wrap(move.as.en_passant));

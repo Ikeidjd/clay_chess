@@ -177,7 +177,6 @@ static void maybe_insert_promotion(const Board* board, MoveArray* moves, MoveNor
 }
 
 static void moves_generate_pawn(const Board* board, MoveArray* moves, Pos from) {
-    printf("%d, %d\n", board->en_passant.row, board->en_passant.col);
     Piece pawn = board_get(board, from);
 
     Dir forward = { -1, 0 };

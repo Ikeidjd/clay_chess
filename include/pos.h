@@ -10,7 +10,9 @@ typedef struct {
 } Pos;
 
 Pos pos_new_invalid(void);
+
 Pos pos_plus_dir(Pos pos, Dir dir);
+Pos pos_between(Pos left, Pos right);
 
 bool pos_is_valid(Pos pos);
 bool pos_eq(Pos left, Pos right);
