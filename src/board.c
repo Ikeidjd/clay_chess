@@ -95,12 +95,23 @@ bool board_is_in_bounds(Pos pos) {
     return pos.row >= 0 && pos.col >= 0 && pos.row < BOARD_SIZE && pos.col < BOARD_SIZE;
 }
 
+Pos board_get_king(const Board* board, PieceColor color) {
+    Pos pos = pos_new_invalid();
+
+    while (board_next_piece(board, &pos)) {
+        Piece piece = board_get(board, pos);
+        if (piece.type == PIECE_TYPE_KING && piece.color == color) return pos;
+    }
+
+    return pos_new_invalid();
+}
+
 void board_move(Board* board, Pos from, Pos to) {
     board_set(board, to, board_get(board, from));
     board_set(board, from, piece_new_empty());
 }
 
-Piece board_next_piece(const Board* board, Pos* pos) {
+bool board_next_piece(const Board* board, Pos* pos) {
     Piece piece = piece_new_empty();
 
     if (pos_eq(*pos, pos_new_invalid())) {
@@ -119,7 +130,7 @@ Piece board_next_piece(const Board* board, Pos* pos) {
         piece = board_get(board, *pos);
     }
 
-    return piece;
+    return !piece_is_empty(piece);
 }
 
 bool board_can_castle_kingside(const Board* board, PieceColor color) {

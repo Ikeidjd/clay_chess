@@ -16,7 +16,7 @@ Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
             .backgroundColor = { 100, 100, 255, 255 }, \
         }) { \
             if (Clay_Hovered() && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) { \
-                Board board = board_new_normal(); \
+                Board board = board_new_castle(); \
                 if (color == PIECE_COLOR_EMPTY) { \
                     *state = state_main_wrap(is_debug ? state_main_new_debug(board) : state_main_new(board, PIECE_COLOR_WHITE)); \
                 } else { \

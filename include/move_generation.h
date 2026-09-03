@@ -31,5 +31,5 @@ void move_board_set(MoveBoard* moves, Pos pos, Move move);
 
 MoveBoard move_array_to_board(const MoveArray* array);
 
-MoveArray moves_generate_array(const Board* board, Pos pos);
-MoveBoard moves_generate_board(const Board* board, Pos pos);
+MoveArray moves_generate_array(const Board* board, Pos pos, bool should_detect_checks);
+MoveBoard moves_generate_board(const Board* board, Pos pos, bool should_detect_checks);

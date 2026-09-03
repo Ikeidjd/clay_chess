@@ -53,6 +53,7 @@ Move move_new_en_passant(Pos from, Pos to);
 Move move_new_promotion(MoveNormal move, Piece transgender);
 
 bool move_is_empty(Move move);
+bool move_is_legal(Board board, Move move, PieceColor king_color);
 
 void move_execute(Board* board, Move move);
 

@@ -30,6 +30,7 @@ typedef struct {
     sock_t host_socket;
     sock_t guest_socket;
     bool is_en_passant_visible;
+    bool should_detect_checks;
 } MainState;
 
 MainState state_main_new(Board board, PieceColor my_turn);

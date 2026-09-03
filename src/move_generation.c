@@ -216,7 +216,20 @@ static void moves_generate_pawn(const Board* board, MoveArray* moves, Pos from) 
     }
 }
 
-MoveArray moves_generate_array(const Board* board, Pos pos) {
+static MoveArray detect_checks(const Board* board, const MoveArray* moves, Pos pos) {
+    Board board_copy = *board;
+    MoveArray out = move_array_new();
+    Piece piece = board_get(board, pos);
+
+    for (size_t i = 0; i < moves->count; i++) {
+        Move move = move_array_get(moves, i);
+        if (move_is_legal(*board, move, piece.color)) move_array_insert(&out, move);
+    }
+
+    return out;
+}
+
+MoveArray moves_generate_array(const Board* board, Pos pos, bool should_detect_checks) {
     MoveArray moves = move_array_new();
     Piece piece = board_get(board, pos);
 
@@ -245,10 +258,14 @@ MoveArray moves_generate_array(const Board* board, Pos pos) {
             break;
     }
 
+    if (should_detect_checks) {
+        moves = detect_checks(board, &moves, pos);
+    }
+
     return moves;
 }
 
-MoveBoard moves_generate_board(const Board* board, Pos pos) {
-    MoveArray array = moves_generate_array(board, pos);
+MoveBoard moves_generate_board(const Board* board, Pos pos, bool should_detect_checks) {
+    MoveArray array = moves_generate_array(board, pos, should_detect_checks);
     return move_array_to_board(&array);
 }

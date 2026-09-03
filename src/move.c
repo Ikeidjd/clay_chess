@@ -5,6 +5,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include "move_generation.h"
+
 Move move_normal_wrap(MoveNormal move) {
     return (Move) {
         .type = MOVE_NORMAL,
@@ -85,6 +87,40 @@ bool move_is_empty(Move move) {
     return move.type == MOVE_EMPTY;
 }
 
+bool move_is_legal(Board board, Move move, PieceColor king_color) {
+    move_execute(&board, move);
+
+    Pos king_pos = board_get_king(&board, king_color);
+    Pos enemy_pos = pos_new_invalid();
+
+    while (board_next_piece(&board, &enemy_pos)) {
+        Piece piece = board_get(&board, enemy_pos);
+        if (piece.color == king_color) continue;
+
+        MoveArray moves = moves_generate_array(&board, enemy_pos, false);
+
+        for (size_t i = 0; i < moves.count; i++) {
+            Move enemy_move = move_array_get(&moves, i);
+
+            switch (enemy_move.type) {
+                case MOVE_NORMAL:
+                    if (pos_eq(enemy_move.as.normal.to, king_pos)) return false;
+                    break;
+                case MOVE_PROMOTION:
+                    if (pos_eq(enemy_move.as.promotion.move.to, king_pos)) return false;
+                    break;
+                case MOVE_EMPTY:
+                case MOVE_CASTLE:
+                case MOVE_PAWN_DOUBLE:
+                case MOVE_EN_PASSANT:
+                    break;
+            }
+        }
+    }
+
+    return true;
+}
+
 void move_execute(Board* board, Move move) {
     board->en_passant = pos_new_invalid();
 
@@ -101,14 +137,23 @@ void move_execute(Board* board, Move move) {
                     board_disable_can_castle_kingside(board, piece.color);
                     board_disable_can_castle_queenside(board, piece.color);
                     break;
-                case PIECE_TYPE_ROOK:
-                    if (move.as.normal.from.col < BOARD_SIZE / 2) {
-                        board_disable_can_castle_queenside(board, piece.color);
-                    } else {
+                case PIECE_TYPE_ROOK: {
+                    Pos queenside_rook_starting_position = { 7, 0 };
+                    Pos kingside_rook_starting_position = { 7, 7 };
+
+                    if (piece.color == PIECE_COLOR_BLACK) {
+                        queenside_rook_starting_position.row = 0;
+                        kingside_rook_starting_position.row = 0;
+                    }
+
+                    if (pos_eq(move.as.normal.from, kingside_rook_starting_position) || pos_eq(move.as.normal.to, kingside_rook_starting_position)) {
                         board_disable_can_castle_kingside(board, piece.color);
+                    } else if (pos_eq(move.as.normal.from, queenside_rook_starting_position) || pos_eq(move.as.normal.to, queenside_rook_starting_position)) {
+                        board_disable_can_castle_queenside(board, piece.color);
                     }
 
                     break;
+                }
                 default:
                     break;
             }

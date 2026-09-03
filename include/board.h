@@ -25,12 +25,14 @@ Piece board_get(const Board* board, Pos pos);
 void board_set(Board* board, Pos pos, Piece piece);
 bool board_is_in_bounds(Pos pos);
 
+Pos board_get_king(const Board* board, PieceColor color);
+
 void board_move(Board* board, Pos from, Pos to);
 
 // If there is a piece at pos, it will be ignored
 // The position of the next piece will be written to pos
 // Pass in an invalid position (pos_new_invalid()) to start iteration
-Piece board_next_piece(const Board* board, Pos* pos);
+bool board_next_piece(const Board* board, Pos* pos);
 
 bool board_can_castle_kingside(const Board* board, PieceColor color);
 void board_disable_can_castle_kingside(Board* board, PieceColor color);

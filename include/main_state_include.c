@@ -86,7 +86,7 @@ static void detect_piece_mouse_input(MainState* self, Pos pos) {
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && move_is_empty(move)) {
         if (is_selectable(self, piece.color)) {
             self->selected_pos = pos;
-            self->moves = moves_generate_board(&self->board, pos);
+            self->moves = moves_generate_board(&self->board, pos, self->should_detect_checks);
         } else {
             self->selected_pos = pos_new_invalid();
             self->moves = move_board_new();

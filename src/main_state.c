@@ -27,6 +27,7 @@ MainState state_main_new_debug(Board board) {
         .host_socket = SOCKET_INVALID,
         .guest_socket = SOCKET_INVALID,
         .is_en_passant_visible = false,
+        .should_detect_checks = true,
     };
 }
 
@@ -57,11 +58,11 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
             self->cur_turn = piece_color_swap(self->cur_turn);
 
             Pos pos = pos_new_invalid();
-            Piece piece;
-            while (!piece_is_empty(piece = board_next_piece(&self->board, &pos))) {
-                if (piece.color == self->my_turn) continue;
 
-                MoveArray moves = moves_generate_array(&self->board, pos);
+            while (board_next_piece(&self->board, &pos)) {
+                if (board_get(&self->board, pos).color == self->my_turn) continue;
+
+                MoveArray moves = moves_generate_array(&self->board, pos, self->should_detect_checks);
 
                 for (size_t i = 0; i < moves.count; i++) {
                     Move move = move_array_get(&moves, i);
