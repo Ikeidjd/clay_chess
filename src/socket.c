@@ -148,6 +148,10 @@ sock_t socket_try_to_accept(sock_t sock_fd) {
         return SOCKET_INVALID;
     }
 
+    if (set_non_blocking(new_sock_fd) == SOCK_ERROR) {
+        return SOCKET_INVALID;
+    }
+
     return new_sock_fd;
 }
 
