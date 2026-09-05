@@ -19,6 +19,13 @@ typedef struct {
     Piece transgender;
 } PromotionOption;
 
+typedef enum {
+    GAME_OVER_NONE,
+    GAME_OVER_STALEMATE,
+    GAME_OVER_CHECKMATE_WHITE,
+    GAME_OVER_CHECKMATE_BLACK,
+} GameOverType;
+
 typedef struct {
     MoveBoard moves;
     Board board;
@@ -26,6 +33,7 @@ typedef struct {
     Move promotion;
     Pos selected_pos;
     Pos check_pos;
+    GameOverType game_over;
     PieceColor my_turn;
     PieceColor cur_turn;
     sock_t host_socket;

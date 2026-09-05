@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
     const int screen_width = 768;
     const int screen_height = 768;
 
+    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT | FLAG_WINDOW_HIGHDPI);
     Clay_Raylib_Initialize(screen_width, screen_height, "Clay Test", FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(60);
 

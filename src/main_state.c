@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "textures.h"
 #include "fonts.h"
@@ -23,6 +24,7 @@ MainState state_main_new_debug(Board board) {
         .promotion = { 0 },
         .selected_pos = pos_new_invalid(),
         .check_pos = pos_new_invalid(),
+        .game_over = GAME_OVER_NONE,
         .my_turn = PIECE_COLOR_EMPTY,
         .cur_turn = PIECE_COLOR_EMPTY,
         .host_socket = SOCKET_INVALID,
@@ -89,12 +91,14 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
         },
         .backgroundColor = { 120, 120, 160, 255 },
     }) {
+        float board_size = fmin(GetScreenWidth(), GetScreenHeight());
+
         CLAY(CLAY_ID("board"), (Clay_ElementDeclaration) {
             .layout = {
-                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
+                // Using CLAY_SIZING_GROW(0) instead of CLAY_SIZING_FIXED(board_size), the end_game component wouldn't look right horizontally on a non-square screen, extending more than it should
+                .sizing = { CLAY_SIZING_FIXED(board_size), CLAY_SIZING_FIXED(board_size) },
                 .layoutDirection = CLAY_TOP_TO_BOTTOM,
             },
-            .aspectRatio = { 1 },
         }) {
             for (int unprocessed_row = 0; unprocessed_row < BOARD_SIZE; unprocessed_row++) {
                 int row = unprocessed_row;
@@ -113,6 +117,8 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
                     build_board_square_layout(self, (Pos) { row, col });
                 }
             }
+
+            build_game_over_layout(self);
         }
     }
 

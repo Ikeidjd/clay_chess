@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 
+#include "util.h"
 #include "textures.h"
 #include "fonts.h"
 #include "sounds.h"
@@ -51,6 +52,21 @@ static Sound get_move_sound_effect(MainState* self, Move move) {
 }
 
 static void check_check(MainState* self) {
+    self->game_over = is_debug(self) ? GAME_OVER_NONE : GAME_OVER_STALEMATE;
+    Pos pos = pos_new_invalid();
+
+    while (board_next_piece(&self->board, &pos)) {
+        if (board_get(&self->board, pos).color != self->cur_turn) continue;
+
+        MoveArray moves = moves_generate_array(&self->board, pos, self->should_detect_checks);
+        printf("%zu\n", moves.count);
+
+        if (moves.count > 0) {
+            self->game_over = GAME_OVER_NONE;
+            break;
+        }
+    }
+
     if (move_is_legal(self->board, move_new_empty(), self->cur_turn)) {
         self->check_pos = pos_new_invalid();
         return;
@@ -58,6 +74,10 @@ static void check_check(MainState* self) {
 
     self->check_pos = board_get_king(&self->board, self->cur_turn);
     PlaySound(sounds.check);
+
+    if (self->game_over != GAME_OVER_NONE) {
+        self->game_over = self->cur_turn == PIECE_COLOR_WHITE ? GAME_OVER_CHECKMATE_BLACK : GAME_OVER_CHECKMATE_WHITE;
+    }
 }
 
 static void perform_move(MainState* self, Move move) {
@@ -154,7 +174,7 @@ static Clay_RenderCommandArray try_to_connect(MainState* self, float delta_time)
     }) {
         CLAY_TEXT(CLAY_STRING("Waiting for player 2 to join..."), (Clay_TextElementConfig) {
             .fontId = FONT_NORMAL,
-            .fontSize = 24,
+            .fontSize = scale_with_screen(24),
             .textColor = { 255, 255, 255, 255 },
         });
     }
@@ -240,6 +260,116 @@ static void build_board_square_layout(MainState* self, Pos pos) {
             build_piece_layout(self, pos);
         } else {
             build_promotion_option_layout(self, *optional_option);
+        }
+    }
+}
+
+static Clay_String get_game_over_message(MainState* self) {
+    switch (self->game_over) {
+        case GAME_OVER_NONE:
+            return CLAY_STRING("");
+        case GAME_OVER_STALEMATE:
+            return CLAY_STRING("STALEMATE");
+        case GAME_OVER_CHECKMATE_WHITE:
+            return CLAY_STRING("WHITE CHECKMATED BLACK");
+        case GAME_OVER_CHECKMATE_BLACK:
+            return CLAY_STRING("BLACK CHECKMATED WHITE");
+    }
+}
+
+static void build_game_over_layout(MainState* self) {
+    if (self->game_over == GAME_OVER_NONE) return;
+
+    CLAY(CLAY_ID("game_over"), (Clay_ElementDeclaration) {
+        .layout = {
+            .sizing = { CLAY_SIZING_PERCENT(0.875), CLAY_SIZING_PERCENT(0.625) },
+            .layoutDirection = CLAY_TOP_TO_BOTTOM,
+        },
+        .floating = {
+            .attachTo = CLAY_ATTACH_TO_PARENT,
+            .attachPoints = {
+                .element = CLAY_ATTACH_POINT_CENTER_CENTER,
+                .parent = CLAY_ATTACH_POINT_CENTER_CENTER,
+            }
+        },
+        .backgroundColor = { 184, 111, 80, 222 },
+        .cornerRadius = CLAY_CORNER_RADIUS(scale_with_screen(64)),
+        .border = {
+            .color = { 144, 77, 60, 255 },
+            .width = CLAY_BORDER_ALL(scale_with_screen(8)),
+        },
+    }) {
+        CLAY(CLAY_ID("game_over_reason"), (Clay_ElementDeclaration) {
+            .layout = {
+                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
+                .layoutDirection = CLAY_TOP_TO_BOTTOM,
+                .childAlignment = { CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER },
+                .childGap = scale_with_screen(16),
+            },
+        }) {
+            CLAY_TEXT(CLAY_STRING("GAME OVER"), (Clay_TextElementConfig) {
+                .fontId = FONT_NORMAL,
+                .fontSize = scale_with_screen(72),
+                .textAlignment = CLAY_TEXT_ALIGN_CENTER,
+                .textColor = { 255, 255, 255, 255 },
+            });
+
+            CLAY_TEXT(get_game_over_message(self), (Clay_TextElementConfig) {
+                .fontId = FONT_NORMAL,
+                .fontSize = scale_with_screen(48),
+                .textAlignment = CLAY_TEXT_ALIGN_CENTER,
+                .textColor = { 200, 200, 200, 255 },
+            });
+        }
+
+        CLAY(CLAY_ID("game_over_options"), (Clay_ElementDeclaration) {
+            .layout = {
+                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
+                .layoutDirection = CLAY_LEFT_TO_RIGHT,
+                .padding = CLAY_PADDING_ALL(scale_with_screen(32)),
+                .childGap = scale_with_screen(32),
+            },
+        }) {
+            Clay_ElementDeclaration side = {
+                .layout = {
+                    .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
+                    .childAlignment = { CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER },
+                },
+            };
+
+            Clay_ElementDeclaration button = {
+                .layout = {
+                    .sizing = { CLAY_SIZING_FIT(0), CLAY_SIZING_FIT(0) },
+                    .padding = CLAY_PADDING_ALL(scale_with_screen(16)),
+                },
+                .backgroundColor = { 255, 100, 80, 222 },
+                .border = {
+                    .color = { 200, 66, 60, 255 },
+                    .width = CLAY_BORDER_ALL(scale_with_screen(4)),
+                },
+                .cornerRadius = CLAY_CORNER_RADIUS(scale_with_screen(16)),
+            };
+
+            Clay_TextElementConfig text = {
+                .fontId = FONT_NORMAL,
+                .fontSize = scale_with_screen(36),
+                .textAlignment = CLAY_TEXT_ALIGN_CENTER,
+                .textColor = { 0, 0, 0, 255 },
+            };
+
+            CLAY(CLAY_ID("game_over_options_left"), side) {
+                CLAY(CLAY_ID("main_menu_button"), button) {
+                    CLAY_TEXT(CLAY_STRING("MAIN MENU"), text);
+                }
+            }
+
+            CLAY(CLAY_ID("game_over_options_right"), side) {
+                CLAY(CLAY_ID("rematch_button"), button) {
+                    // With the spaces on the sides, it has the same length as MAIN MENU, so it looks even
+                    // (non-monospace fonts don't exist, trust)
+                    CLAY_TEXT(CLAY_STRING(" REMATCH "), text);
+                }
+            }
         }
     }
 }

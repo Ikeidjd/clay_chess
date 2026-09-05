@@ -1,5 +1,6 @@
 #include "game_state.h"
 
+#include "util.h"
 #include "fonts.h"
 
 Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
@@ -11,7 +12,7 @@ Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
             .layout = { \
                 .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) }, \
                 .childAlignment = { CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER }, \
-                .padding = CLAY_PADDING_ALL(16), \
+                .padding = CLAY_PADDING_ALL(scale_with_screen(16)), \
             }, \
             .backgroundColor = { 100, 100, 255, 255 }, \
         }) { \
@@ -26,7 +27,7 @@ Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
             } \
             CLAY_TEXT(CLAY_STRING(button_text), (Clay_TextElementConfig) { \
                 .fontId = FONT_NORMAL, \
-                .fontSize = 32, \
+                .fontSize = scale_with_screen(32), \
                 .textColor = { 200, 200, 255, 255 }, \
                 .textAlignment = CLAY_TEXT_ALIGN_CENTER, \
             }); \
@@ -38,14 +39,14 @@ Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
             .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
             .layoutDirection = CLAY_LEFT_TO_RIGHT,
             .childAlignment = { .y = CLAY_ALIGN_Y_CENTER },
-            .padding = CLAY_PADDING_ALL(16),
+            .padding = CLAY_PADDING_ALL(scale_with_screen(16)),
         },
     }) {
         CLAY(CLAY_ID("buttons"), (Clay_ElementDeclaration) {
             .layout = {
                 .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
                 .layoutDirection = CLAY_LEFT_TO_RIGHT,
-                .childGap = 16,
+                .childGap = scale_with_screen(16),
             },
         }) {
             BUTTON("start_game_button", "START GAME", start, PIECE_COLOR_WHITE, false);
