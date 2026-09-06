@@ -3,6 +3,7 @@
 #include "game_state.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "util.h"
 #include "textures.h"
@@ -34,6 +35,30 @@ static bool is_selectable(MainState* self, PieceColor color) {
     return color != PIECE_COLOR_EMPTY && (color == self->my_turn || is_debug(self));
 }
 
+static void check_capture(MainState* self, Move move) {
+    Piece captured_piece = piece_new_empty();
+
+    switch (move.type) {
+        case MOVE_EMPTY:
+        case MOVE_PAWN_DOUBLE:
+        case MOVE_CASTLE:
+            break;
+        case MOVE_NORMAL:
+        case MOVE_PROMOTION:
+            captured_piece = board_get(&self->board, move.as.normal.to);
+            break;
+        case MOVE_EN_PASSANT:
+            captured_piece = board_get(&self->board, pos_plus_dir(move.as.en_passant.to, (Dir) { -1, 0 }));
+            if (piece_is_empty(captured_piece)) captured_piece = board_get(&self->board, pos_plus_dir(move.as.en_passant.to, (Dir) { 1, 0 }));
+            break;
+    }
+
+    if (piece_is_empty(captured_piece)) return;
+
+    size_t* captured_pieces_counts = captured_piece.color == PIECE_COLOR_WHITE ? self->captured_pieces.white : self->captured_pieces.black;
+    captured_pieces_counts[captured_piece.type]++;
+}
+
 static Sound get_move_sound_effect(MainState* self, Move move) {
     switch (move.type) {
         case MOVE_EMPTY:
@@ -42,12 +67,12 @@ static Sound get_move_sound_effect(MainState* self, Move move) {
             break;
         case MOVE_NORMAL:
         case MOVE_PAWN_DOUBLE:
-        case MOVE_EN_PASSANT:
+        case MOVE_PROMOTION:
             return piece_is_empty(board_get(&self->board, move.as.normal.to)) ? sounds.move : sounds.capture;
+        case MOVE_EN_PASSANT:
+            return sounds.capture;
         case MOVE_CASTLE:
             return sounds.castle;
-        case MOVE_PROMOTION:
-            return get_move_sound_effect(self, move_normal_wrap(move.as.promotion.move));
     }
 }
 
@@ -59,7 +84,6 @@ static void check_check(MainState* self) {
         if (board_get(&self->board, pos).color != self->cur_turn) continue;
 
         MoveArray moves = moves_generate_array(&self->board, pos, self->should_detect_checks);
-        printf("%zu\n", moves.count);
 
         if (moves.count > 0) {
             self->game_over = GAME_OVER_NONE;
@@ -87,7 +111,10 @@ static void perform_move(MainState* self, Move move) {
         printf("Message sent: %s\n", notation.data);
     }
 
-    Sound sound = get_move_sound_effect(self, move); // Important to put this before move_execute, otherwise, it can't tell if it's a capture
+    // Important to put these two statements before move_execute, otherwise, they can't tell if it's a capture
+    check_capture(self, move);
+    Sound sound = get_move_sound_effect(self, move);
+
     move_execute(&self->board, move);
 
     self->selected_pos = pos_new_invalid();
@@ -251,7 +278,7 @@ static void build_board_square_layout(MainState* self, Pos pos) {
 
     CLAY(CLAY_IDI("board_square", pos.row * 8 + pos.col), (Clay_ElementDeclaration) {
         .layout = {
-            .sizing = { CLAY_SIZING_PERCENT(0.125), { 0 } },
+            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
         },
         .backgroundColor = square_color,
         .aspectRatio = { 1 },
@@ -369,6 +396,59 @@ static void build_game_over_layout(MainState* self) {
                     // (non-monospace fonts don't exist, trust)
                     CLAY_TEXT(CLAY_STRING(" REMATCH "), text);
                 }
+            }
+        }
+    }
+}
+
+static void build_casualties_layout(MainState* self, float board_size, PieceColor color, Clay_FloatingAttachPointType attachment) {
+    const char* id = color == PIECE_COLOR_WHITE ? "white_casualties" : "black_casualties";
+    const char* inner_id = color == PIECE_COLOR_WHITE ? "white_casualty" : "black_casualty";
+
+    size_t* captured_pieces_counts = color == PIECE_COLOR_WHITE ? self->captured_pieces.white : self->captured_pieces.black;
+
+    Clay_String str = {
+        .chars = id,
+        .length = strlen(id),
+        .isStaticallyAllocated = true,
+    };
+
+    Clay_String inner_str = {
+        .chars = inner_id,
+        .length = strlen(inner_id),
+        .isStaticallyAllocated = true,
+    };
+
+    CLAY(CLAY_SID(str), (Clay_ElementDeclaration) {
+        .layout = {
+            .sizing = { CLAY_SIZING_FIXED(board_size), CLAY_SIZING_PERCENT(0.1) },
+            .layoutDirection = CLAY_LEFT_TO_RIGHT,
+            .childAlignment = { CLAY_ALIGN_X_LEFT, CLAY_ALIGN_Y_BOTTOM },
+        },
+    }) {
+        float offset = 0;
+        float size = 0.0625 * board_size;
+
+        for (PieceType piece_type = PIECE_TYPE_PAWN; piece_type <= PIECE_TYPE_KING; piece_type++) {
+            size_t count = captured_pieces_counts[piece_type];
+
+            for (size_t i = 0; i < count; i++) {
+                CLAY(CLAY_SIDI(inner_str, piece_type * 64 + i), (Clay_ElementDeclaration) {
+                    .layout = {
+                        .sizing = { CLAY_SIZING_FIXED(size), CLAY_SIZING_FIXED(size) },
+                    },
+                    .floating = {
+                        .attachTo = CLAY_ATTACH_TO_PARENT,
+                        .attachPoints = {
+                            .element = attachment,
+                            .parent = attachment,
+                        },
+                        .offset = { offset, 0 },
+                    },
+                    .image = { piece_get_texture((Piece) { .type = piece_type, .color = color }) },
+                });
+
+                offset += size * 0.5;
             }
         }
     }

@@ -27,8 +27,14 @@ typedef enum {
 } GameOverType;
 
 typedef struct {
+    size_t white[PIECE_TYPE_KING + 1];
+    size_t black[PIECE_TYPE_KING + 1];
+} CapturedPieces;
+
+typedef struct {
     MoveBoard moves;
     Board board;
+    CapturedPieces captured_pieces;
     PromotionOption promotion_options[PROMOTION_OPTIONS_COUNT];
     Move promotion;
     Pos selected_pos;

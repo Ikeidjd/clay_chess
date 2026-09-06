@@ -5,5 +5,5 @@
 #include "raylib.h"
 
 static inline double scale_with_screen(double d) {
-    return d * fmin(GetScreenWidth() / 784.0, GetScreenHeight() / 784.0);
+    return d * fmin(GetScreenWidth() / 768.0, GetScreenHeight() / 768.0);
 }

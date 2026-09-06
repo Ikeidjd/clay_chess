@@ -216,7 +216,6 @@ static void moves_generate_pawn(const Board* board, MoveArray* moves, Pos from) 
 }
 
 static MoveArray detect_checks(const Board* board, const MoveArray* moves, Pos pos) {
-    Board board_copy = *board;
     MoveArray out = move_array_new();
     Piece piece = board_get(board, pos);
 

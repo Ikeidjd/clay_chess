@@ -20,6 +20,7 @@ MainState state_main_new_debug(Board board) {
     return (MainState) {
         .moves = { 0 },
         .board = board,
+        .captured_pieces = { 0 },
         .promotion_options = { 0 },
         .promotion = { 0 },
         .selected_pos = pos_new_invalid(),
@@ -87,11 +88,14 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
     CLAY(CLAY_ID("panel"), (Clay_ElementDeclaration) {
         .layout = {
             .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
+            .layoutDirection = CLAY_TOP_TO_BOTTOM,
             .childAlignment = { CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER }
         },
         .backgroundColor = { 120, 120, 160, 255 },
     }) {
-        float board_size = fmin(GetScreenWidth(), GetScreenHeight());
+        float board_size = fmin(GetScreenWidth(), GetScreenHeight()) * 0.8;
+
+        build_casualties_layout(self, board_size, is_debug(self) ? PIECE_COLOR_WHITE : self->my_turn, CLAY_ATTACH_POINT_LEFT_BOTTOM);
 
         CLAY(CLAY_ID("board"), (Clay_ElementDeclaration) {
             .layout = {
@@ -120,6 +124,8 @@ Clay_RenderCommandArray state_main_update(MainState* self, float delta_time) {
 
             build_game_over_layout(self);
         }
+
+        build_casualties_layout(self, board_size, is_debug(self) ? PIECE_COLOR_BLACK : piece_color_swap(self->my_turn), CLAY_ATTACH_POINT_LEFT_TOP);
     }
 
     return Clay_EndLayout(delta_time);

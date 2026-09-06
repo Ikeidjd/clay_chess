@@ -1,38 +1,67 @@
 #include "game_state.h"
 
+#include <string.h>
+
 #include "util.h"
 #include "fonts.h"
 
-Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
-    Clay_BeginLayout();
+static void button(const char* id, const char* text, GameState* state, void(*on_click)(GameState* state)) {
+    Clay_String str = {
+        .chars = id,
+        .length = strlen(id),
+        .isStaticallyAllocated = true,
+    };
 
-    #define BUTTON(button_id, button_text, start_or_join, color, is_debug) \
-    do { \
-        CLAY(CLAY_ID(button_id), (Clay_ElementDeclaration) { \
-            .layout = { \
-                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) }, \
-                .childAlignment = { CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER }, \
-                .padding = CLAY_PADDING_ALL(scale_with_screen(16)), \
-            }, \
-            .backgroundColor = { 100, 100, 255, 255 }, \
-        }) { \
-            if (Clay_Hovered() && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) { \
-                Board board = board_new_castle(); \
-                if (color == PIECE_COLOR_EMPTY) { \
-                    *state = state_main_wrap(is_debug ? state_main_new_debug(board) : state_main_new(board, PIECE_COLOR_WHITE)); \
-                } else { \
-                    MainState next_state = state_main_new(board, color); \
-                    if (state_main_ ## start_or_join ## _game(&next_state, "localhost", "3940") != SOCKET_INVALID) *state = state_main_wrap(next_state); \
-                } \
-            } \
-            CLAY_TEXT(CLAY_STRING(button_text), (Clay_TextElementConfig) { \
-                .fontId = FONT_NORMAL, \
-                .fontSize = scale_with_screen(32), \
-                .textColor = { 200, 200, 255, 255 }, \
-                .textAlignment = CLAY_TEXT_ALIGN_CENTER, \
-            }); \
-        } \
-    } while(0)
+    Clay_String text_str = {
+        .chars = text,
+        .length = strlen(text),
+        .isStaticallyAllocated = true,
+    };
+
+    CLAY(CLAY_SID(str), (Clay_ElementDeclaration) {
+        .layout = {
+            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) },
+            .childAlignment = { CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER },
+            .padding = CLAY_PADDING_ALL(scale_with_screen(16)),
+        },
+        .backgroundColor = { 100, 100, 255, 255 },
+    }) {
+        if (Clay_Hovered() && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            on_click(state);
+        }
+        CLAY_TEXT(text_str, (Clay_TextElementConfig) {
+            .fontId = FONT_NORMAL,
+            .fontSize = scale_with_screen(32),
+            .textColor = { 200, 200, 255, 255 },
+            .textAlignment = CLAY_TEXT_ALIGN_CENTER,
+        });
+    }
+}
+
+static Board board;
+
+void start_game_button_on_click(GameState* state) {
+    MainState next_state = state_main_new(board, PIECE_COLOR_WHITE);
+    if (state_main_start_game(&next_state, "localhost", "3940") != SOCKET_INVALID) *state = state_main_wrap(next_state);
+}
+
+void join_game_button_on_click(GameState* state) {
+    MainState next_state = state_main_new(board, PIECE_COLOR_BLACK);
+    if (state_main_join_game(&next_state, "localhost", "3940") != SOCKET_INVALID) *state = state_main_wrap(next_state);
+}
+
+void offline_game_button_on_click(GameState* state) {
+    *state = state_main_wrap(state_main_new(board, PIECE_COLOR_WHITE));
+}
+
+void debug_game_button_on_click(GameState* state) {
+    *state = state_main_wrap(state_main_new_debug(board));
+}
+
+Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
+    board = board_new_normal();
+
+    Clay_BeginLayout();
 
     CLAY(CLAY_ID("panel"), (Clay_ElementDeclaration) {
         .layout = {
@@ -49,10 +78,10 @@ Clay_RenderCommandArray state_menu_update(float delta_time, GameState* state) {
                 .childGap = scale_with_screen(16),
             },
         }) {
-            BUTTON("start_game_button", "START GAME", start, PIECE_COLOR_WHITE, false);
-            BUTTON("join_game_button", "JOIN GAME", join, PIECE_COLOR_BLACK, false);
-            BUTTON("offline_game_button", "OFFLINE GAME", start, PIECE_COLOR_EMPTY, false);
-            BUTTON("debug_game_button", "DEBUG GAME", start, PIECE_COLOR_EMPTY, true);
+            button("start_game_button", "START GAME", state, start_game_button_on_click);
+            button("join_game_button", "JOIN GAME", state, join_game_button_on_click);
+            button("offline_game_button", "OFFLINE GAME", state, offline_game_button_on_click);
+            button("debug_game_button", "DEBUG GAME", state, debug_game_button_on_click);
         }
     }
 

@@ -106,16 +106,10 @@ bool move_is_legal(Board board, Move move, PieceColor king_color) {
 
                 switch (enemy_move.type) {
                     case MOVE_NORMAL:
+                    case MOVE_PROMOTION:
                         if (pos_eq(enemy_move.as.normal.to, king_pos_start)
                             || pos_eq(enemy_move.as.normal.to, king_pos_through)
                             || pos_eq(enemy_move.as.normal.to, king_pos)
-                        ) return false;
-
-                        break;
-                    case MOVE_PROMOTION:
-                        if (pos_eq(enemy_move.as.promotion.move.to, king_pos_start)
-                            || pos_eq(enemy_move.as.promotion.move.to, king_pos_through)
-                            || pos_eq(enemy_move.as.promotion.move.to, king_pos)
                         ) return false;
 
                         break;
