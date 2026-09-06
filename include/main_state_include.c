@@ -243,7 +243,7 @@ static void build_piece_layout(MainState* self, Pos pos) {
                 .layout = {
                     .sizing = { CLAY_SIZING_GROW(0), { 0 } }
                 },
-                .image = { piece_is_empty(piece) ? &textures.move_indicator : &textures.capture_indicator },
+                .image = { move.type != MOVE_EN_PASSANT && piece_is_empty(piece) ? &textures.move_indicator : &textures.capture_indicator },
                 .aspectRatio = { 1 },
             });
         }
